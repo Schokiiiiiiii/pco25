@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT_DIR=code/counter
+PROJECT_DIR=common
 ARCHIVE=rendu.tar.gz
 
 if [ ! -d "$PROJECT_DIR" ]
