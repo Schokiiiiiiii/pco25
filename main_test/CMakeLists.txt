@@ -11,3 +11,17 @@ find_package(Qt5 COMPONENTS Core Gui Widgets)
 if (NOT Qt5_FOUND)
     find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 endif()
+
+
+add_executable(main_test
+    main_test.cpp
+)
+
+target_link_libraries(main_test
+    PRIVATE
+        common
+        -lpcosynchro
+        -lpthread
+        -lbenchmark
+        -lgtest
+)

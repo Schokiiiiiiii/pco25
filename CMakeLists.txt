@@ -7,6 +7,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+add_subdirectory(common) 
 add_subdirectory(main)
 add_subdirectory(main_bench)
 add_subdirectory(main_test)
