@@ -1,6 +1,9 @@
+
 add_library(common STATIC
     logging.cpp
     primenumberdetector.cpp
+    logging.h
+    primenumberdetector.h
 )
 
 target_include_directories(common

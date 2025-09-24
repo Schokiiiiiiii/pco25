@@ -3,9 +3,6 @@ project(PCO_lab02)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 add_subdirectory(common) 
 add_subdirectory(main)
