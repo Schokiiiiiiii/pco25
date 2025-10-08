@@ -33,13 +33,11 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 
     // initialize all threads
     for (size_t i = 0 ; i < nbThreads - 1 ; ++i) {
-        auto* thread = new PcoThread(isPrimeRange, number, start, start + size_range, isPrime);
-        threads.push_back(thread);
+        threads.push_back( new PcoThread(isPrimeRange, number, start, start + size_range, &isPrime));
         start += size_range;
     }
     // initialize last thread
-    auto* last_thread = new PcoThread(isPrimeRange, number, start, sqrt_num, isPrime);
-    threads.push_back(last_thread);
+    threads.push_back(new PcoThread(isPrimeRange, number, start, sqrt_num, &isPrime));
 
     // wait for all threads to join
     for (size_t i = 0 ; i < nbThreads ; ++i) {
@@ -58,9 +56,9 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 void PrimeNumberDetectorMultiThread::isPrimeRange(const uint64_t number,
                                                   const uint64_t lower,
                                                   uint64_t upper,
-                                                  bool& isPrime) {
+                                                  bool* isPrime) {
     while (upper >= lower) {
-        if (!(number % upper)) isPrime = false;
+        if (!(number % upper)) *isPrime = false;
         --upper;
     }
 }
