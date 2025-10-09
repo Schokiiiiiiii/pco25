@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/main_test.dir/main_test_autogen/mocs_compilation.cpp.o CMakeFiles/main_test.dir/main_test.cpp.o -o main_test  ../common/libcommon.a -lpcosynchro -lpthread -lbenchmark -lgtest 

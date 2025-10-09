@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cmath>
 #include <pcosynchro/pcothread.h>
+#include <vector>
 
 class PrimeNumberDetectorInterface
 {
@@ -22,6 +23,7 @@ public:
 
 class PrimeNumberDetectorMultiThread : public PrimeNumberDetectorInterface
 {
+    size_t threads_count;
 public:
     PrimeNumberDetectorMultiThread(size_t /*nbThreads*/);
 

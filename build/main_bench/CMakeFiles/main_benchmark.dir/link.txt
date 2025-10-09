@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/main_benchmark.dir/main_benchmark_autogen/mocs_compilation.cpp.o CMakeFiles/main_benchmark.dir/main_benchmark.cpp.o -o main_benchmark  ../common/libcommon.a -lpcosynchro -lpthread -lbenchmark 
