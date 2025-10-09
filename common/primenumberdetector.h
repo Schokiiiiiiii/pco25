@@ -9,21 +9,19 @@
 #include <pcosynchro/pcothread.h>
 #include <vector>
 
-class PrimeNumberDetectorInterface
-{
+class PrimeNumberDetectorInterface {
 public:
     virtual bool isPrime(uint64_t number) = 0;
 };
 
-class PrimeNumberDetector : public PrimeNumberDetectorInterface
-{
+class PrimeNumberDetector : public PrimeNumberDetectorInterface {
 public:
     bool isPrime(uint64_t /*number*/) override;
 };
 
-class PrimeNumberDetectorMultiThread : public PrimeNumberDetectorInterface
-{
-    size_t threads_count;
+class PrimeNumberDetectorMultiThread : public PrimeNumberDetectorInterface {
+    size_t nbThreads;
+    static void isPrimeRange(uint64_t number, uint64_t lower, uint64_t upper, bool *isPrime);
 public:
     PrimeNumberDetectorMultiThread(size_t /*nbThreads*/);
 
