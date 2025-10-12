@@ -9,6 +9,9 @@
 #include <pcosynchro/pcothread.h>
 #include <vector>
 
+// we check every Nth number if we have found a divisor
+const static int N = 5;
+
 class PrimeNumberDetectorInterface {
 public:
     virtual bool isPrime(uint64_t number) = 0;

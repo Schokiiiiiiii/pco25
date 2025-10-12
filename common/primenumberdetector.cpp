@@ -1,4 +1,4 @@
-// Author(s) : Prénom Nom, Prénom Nom
+// Author(s) : Fabien Léger, Aymeric Bonny
 
 #include "primenumberdetector.h"
 
@@ -13,13 +13,9 @@ bool PrimeNumberDetector::isPrime(uint64_t number) {
     return true;
 }
 
-// POUR COMPILER LE PROJET FAIS LE DANS LA LIGNE DE COMMANDE:
-// cmake -B build
-// cmake --build build
-
 PrimeNumberDetectorMultiThread::PrimeNumberDetectorMultiThread(size_t nbThreads) {
     if (nbThreads < 1) throw std::invalid_argument("Invalid number of threads!");
-    this->nbThreads = nbThreads;
+    this -> nbThreads = nbThreads;
 }
 
 bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
@@ -45,7 +41,8 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 
     // wait for all threads to join
     for (size_t i = 0; i < nbThreads; ++i) {
-        threads[i]->join();
+        threads[i] -> join();
+        //if (!isPrime) break; //pas sûr que ce soit une bonne idée
     }
 
     // delete all threads
@@ -58,11 +55,16 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 }
 
 void PrimeNumberDetectorMultiThread::isPrimeRange(const uint64_t number,
-    const uint64_t lower,
-    uint64_t upper,
-    bool *isPrime) {
+                                                const uint64_t lower,
+                                                uint64_t upper,
+                                                bool *isPrime)
+{
     while (upper >= lower) {
         if (!(number % upper)) *isPrime = false;
+
+        // stops the thread if a divisor is found. It checks for this information every Nth number
+        if (!(upper % N) && (*isPrime == false) && (PcoThread::thisThread() -> stopRequested())) return;
+
         --upper;
     }
 }
