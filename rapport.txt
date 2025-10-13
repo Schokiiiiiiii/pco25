@@ -12,16 +12,17 @@ vue en cours.
 
 ## Question 2
 
-Selon les tests effectués, le gain de temps n'est pas linéaire. Au 
-contraire, lorsque le nombre de threads devient trop élevé, le temps que 
-prend le programme à s'exécuter est même plus long qu'avec moins de threads. 
-En l'occurence, en lançant le programme main_test, les tests sont plus 
-rapides avec deux threads qu'avec un seul, et encore plus rapide avec trois. 
-Le gain de temps semble cependant devenir de moins en moins grand, et 
-avec douze threads, la vitesse d'exécution du programme se situe entre un 
-seul thread (en version multithreadé) et deux threads. 
-La machine virtuelle sur laquelle tourne ce programme possède deux coeurs 
-logiques tandis que ma machine hôte en possède douze.
-De manière assez intrigante, le programme semble plus rapide lorsque les 
-nombres testés sont premiers... ce qui laisserait supposer que nous avons 
-fait une erreur.  
+Selon les tests effectués, le gain de temps n'est pas linéaire. Dans le 
+programme main_test fourni, les résultats des tests se présentent 
+globalement ainsi: le test multithread à un thread est plus lent à 
+s'exécuter que le test single thread, ce qui semble raisonnable. Le test à 
+deux threads est environ une seconde plus rapide que le précédent, ce qui 
+constitue un gain de temps assez conséquent. Etonnamment, le test utilisant 
+trois threads est régulièrement légèrement plus lent que celui à un thread 
+de moins, je n'explique pas cette différence perturbante. Le dernier test se 
+fait avec douze threads, soit quatre fois plus que le test précédent; 
+pourtant, il n'est qu'une demi-seconde plus rapide à s'exécuter.
+Quant à la configuration de mon système, la VM possède deux coeurs logiques, 
+tandis que mon hôte en possède douze. 
+Il y a une grande différence entre les nombres premiers et les non-premiers, 
+ce qui a du sens puisque le thread s'arrête lorsqu'il a trouvé un diviseur. 

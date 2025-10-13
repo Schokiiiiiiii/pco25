@@ -42,7 +42,6 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
     // wait for all threads to join
     for (size_t i = 0; i < nbThreads; ++i) {
         threads[i] -> join();
-        //if (!isPrime) break; //pas sûr que ce soit une bonne idée
     }
 
     // delete all threads
@@ -63,7 +62,7 @@ void PrimeNumberDetectorMultiThread::isPrimeRange(const uint64_t number,
         if (!(number % upper)) *isPrime = false;
 
         // stops the thread if a divisor is found. It checks for this information every Nth number
-        if (!(upper % N) && (*isPrime == false) && (PcoThread::thisThread() -> stopRequested())) return;
+        if (!(upper % N) && (*isPrime == false)) return;
 
         --upper;
     }
