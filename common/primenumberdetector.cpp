@@ -22,7 +22,7 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 
     // initialize thread vector & result
     std::vector<PcoThread *> threads;
-    bool isPrime = true;
+    bool volatile isPrime = true;
 
     // calculate square root of number
     auto sqrt_num = static_cast<uint64_t>(sqrt(number));
@@ -57,7 +57,7 @@ bool PrimeNumberDetectorMultiThread::isPrime(uint64_t number) {
 void PrimeNumberDetectorMultiThread::isPrimeRange(const uint64_t number,
                                                 const uint64_t lower,
                                                 uint64_t upper,
-                                                bool *isPrime)
+                                                bool volatile *isPrime)
 {
     while (upper >= lower) {
         if (!(number % upper)) *isPrime = false;

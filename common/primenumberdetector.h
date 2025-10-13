@@ -24,7 +24,7 @@ public:
 
 class PrimeNumberDetectorMultiThread : public PrimeNumberDetectorInterface {
     size_t nbThreads;
-    static void isPrimeRange(uint64_t number, uint64_t lower, uint64_t upper, bool *isPrime);
+    static void isPrimeRange(uint64_t number, uint64_t lower, uint64_t upper, bool volatile *isPrime);
 public:
     PrimeNumberDetectorMultiThread(size_t /*nbThreads*/);
 
