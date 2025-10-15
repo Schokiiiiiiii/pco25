@@ -1,0 +1,109 @@
+# ======================================
+### Targets / Build artifacts
+# ======================================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# JetBrains / CLion build directories
+cmake-build-*/
+out/
+build/
+dist/
+
+# ======================================
+### CLion / IntelliJ IDEA
+# ======================================
+
+# Entire .idea folder except config worth sharing
+.idea/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
+!.idea/inspectionProfiles/
+
+# Explicitly ignore volatile user files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/httpRequests
+.idea/shelf/
+
+# ======================================
+### CMake
+# ======================================
+
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# ======================================
+### Binary / Object files
+# ======================================
+
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.app
+
+# ======================================
+### Logs / Temp / Backups
+# ======================================
+
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.dmp
+*.core
+*.old
+*.orig
+
+# ======================================
+### IDEs (if you open elsewhere)
+# ======================================
+
+# VS Code
+.vscode/
+
+# NetBeans (not used, but harmless to ignore)
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ======================================
+### OS / Editor junk
+# ======================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ======================================
+### Optional: Project-specific
+# ======================================
+
