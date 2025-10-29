@@ -28,19 +28,32 @@ void Supplier::run() {
 
 void Supplier::attemptToProduceResource() {
 
-    // TODO
+    // Tant qu'on peut produire de nouvelles ressources
+    bool canProduce = true;
+    while (canProduce) {
 
+        // Choisir quel item a le moins de stock (recherche du minimum)
+        ItemType lowestStockItem = resourcesSupplied.front();
+        for (ItemType item : resourcesSupplied)
+            if (stocks[item] < stocks[lowestStockItem])
+                lowestStockItem = item;
+
+        // Vérifier si après réduction, on est toujours en positif
+        if (const int newMoney = (money - getEmployeeSalary(getEmployeeThatProduces(lowestStockItem)))) {
+            money -= newMoney;
+            ++stocks[lowestStockItem];
+        } else {
+            canProduce = false;
+        }
+    }
 }
 
 int Supplier::buy(ItemType it, int qty) {
-
-    // TODO
+    return std::min(stocks[it], qty);
 }
 
 void Supplier::pay(int bill) {
-
-    // TODO
-
+    money += bill;
 }
 
 int Supplier::getMaterialCost() {
