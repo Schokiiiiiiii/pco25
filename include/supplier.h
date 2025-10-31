@@ -80,7 +80,7 @@ public:
      * @brief Computes the total material cost produced so far.
      * @return The cumulative cost associated with production.
      */
-    int getMaterialCost();
+    int getMaterialCost() const;
 
     /**
      * @brief Checks whether the supplier sells a given item type.
