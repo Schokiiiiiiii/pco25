@@ -112,6 +112,11 @@ private:
     [[nodiscard]] bool hasResourcesForTreatment() const;
 
     /**
+     * @brief Checks if clinic has the money to treat one patient
+     */
+    [[nodiscard]] bool hasMoneyForTreatment() const;
+
+    /**
      * @brief Chooses a random supplier for a given item.
      * @param item The item type to source.
      * @return Pointer to the selected Supplier.

@@ -28,35 +28,30 @@ void Supplier::run() {
 
 void Supplier::attemptToProduceResource() {
 
-    // Tant qu'on peut produire de nouvelles ressources
-    bool canProduce = true;
-    while (canProduce) {
+    // trouver un item random
+    // (chooseRandomItem demande une map sauf que resourcesSupplied est un vecteur du coup faut le faire manuellement)
+    const ItemType item = resourcesSupplied.at(rand() % resourcesSupplied.size());
 
-        // Choisir quel item a le moins de stock (recherche du minimum)
-        ItemType lowestStockItem = resourcesSupplied.front();
-        for (ItemType item : resourcesSupplied)
-            if (stocks[item] < stocks[lowestStockItem])
-                lowestStockItem = item;
+    // vérifier si après réduction, on est toujours en positif
+    if (const int newMoney = (money - getEmployeeSalary(getEmployeeThatProduces(item))); newMoney >= 0) {
 
-        // Vérifier si après réduction, on est toujours en positif
-        if (const int newMoney = (money - getEmployeeSalary(getEmployeeThatProduces(lowestStockItem)))) {
-            money -= newMoney;
-            ++stocks[lowestStockItem];
-        } else {
-            canProduce = false;
-        }
+        // payer l'employer et ajouter la ressource au stock
+        money = newMoney;
+        ++stocks.at(item);
     }
 }
 
 int Supplier::buy(ItemType it, int qty) {
-    return std::min(stocks[it], qty);
+    if (qty > stocks.at(it))
+        return 0;
+    return qty * getCostPerUnit(it);
 }
 
 void Supplier::pay(int bill) {
     money += bill;
 }
 
-int Supplier::getMaterialCost() {
+int Supplier::getMaterialCost() const {
     int totalCost = 0;
     for (const auto& item : resourcesSupplied) {
         totalCost += getCostPerUnit(item);
