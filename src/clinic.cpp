@@ -4,6 +4,8 @@
 #include <iostream>
 #include <random>
 
+#include "hospital.h"
+
 Clinic::Clinic(int id, int fund, std::vector<ItemType> resourcesNeeded)
 : Seller(fund, id), resourcesNeeded(std::move(resourcesNeeded)) {
     for (auto it : this->resourcesNeeded) {
@@ -39,50 +41,116 @@ void Clinic::run() {
 
 int Clinic::transfer(ItemType what, int qty) {
 
-    // TODO
+    // si on a pas de facture et de l'argent
+    if (unpaidBills.empty() && money > 0) {
 
+        // trouver combien on peut en accepter suivant le coût de traitement
+        int endQty = qty;
+        while (endQty * getCostPerService(ServiceType::Treatment) < 0) { --endQty; }
+
+        // ajouter le nombre de nouveaux patients et le retourner
+        queueSick += endQty;
+        return endQty;
+    }
+
+    // sinon retourner 0 patient acceptés
+    return 0;
 }
 
 bool Clinic::hasResourcesForTreatment() const {
 
-    // TODO
+    // tourner sur toutes les ressources vérifier qu'on en ait 1 de chaque
+    bool hasResources = true;
+    for (const auto& item : resourcesNeeded)
+        if (stocks.at(item) < 1)
+            hasResources = false;
 
+    // retourner le résultat
+    return hasResources;
+}
+
+bool Clinic::hasMoneyForTreatment() const {
+    return (money - getEmployeeSalary(EmployeeType::TreatmentSpecialist)) >= 0;
 }
 
 void Clinic::payBills() {
 
-    // TODO
-    
+    // tourner sur toutes les factures
+    for (auto bill = unpaidBills.cbegin() ; bill != unpaidBills.cend() ; ++bill) {
+
+        // si on peut la payer, la payer et l'effacer
+        if (bill->second <= money) {
+            bill->first->pay(bill->second);
+            unpaidBills.erase(bill);
+        }
+    }
 }
 
 void Clinic::processNextPatient() {
 
-    // TODO
+    // vérifier qu'on a des patients
+    if (stocks[ItemType::SickPatient] < 1)
+        return;
 
+    // commander le matériel nécessaire
+    orderResources();
+
+    // traiter le patient si on peut
+    if (hasMoneyForTreatment() && hasResourcesForTreatment())
+        treatOne();
 }
 
 void Clinic::sendPatientsToRehab() {
 
-    // TODO
+    // tourner sur tous les hôpitaux
+    for (Seller* hospital : hospitals) {
 
+        // si on a plus de patients arrêter
+        if (!stocks[ItemType::RehabPatient]) break;
+
+        // demander à l'hôpital et enregistrer le nombre de patients acceptés
+        const int nbAccepted = hospital->transfer(ItemType::RehabPatient, stocks[ItemType::RehabPatient]);
+        stocks[ItemType::RehabPatient] -= nbAccepted;
+        invoice(nbAccepted * getCostPerService(ServiceType::Treatment), insurance);
+    }
 }
 
 void Clinic::orderResources() {
 
-    // TODO
+    // si on a besoin de l'item
+    for (const auto& item : resourcesNeeded) {
+        if (stocks.at(item) < 1) {
 
+            // demander à chaque seller pour une unité
+            for (Seller* supplier : suppliers) {
+
+                // arrêter si on nous en vend 1 et enregistrer la vente
+                if (int price = supplier->buy(item, 1); price > 0) {
+                    stocks.at(item) += 1;
+                    unpaidBills.emplace_back(dynamic_cast<Supplier *>(supplier), price);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void Clinic::treatOne() {
 
-    // TODO
+    // enlever un item de chaque
+    for (ItemType item : resourcesNeeded)
+        --stocks.at(item);
 
+    // guérir le patient
+    --stocks[ItemType::SickPatient];
+    ++stocks[ItemType::RehabPatient];
+
+    // payer le spécialiste
+    money -= getEmployeeSalary(EmployeeType::TreatmentSpecialist);
 }
 
 void Clinic::pay(int bill) {
-
-    // TODO
-
+    money += bill;
 }
 
 Supplier *Clinic::chooseRandomSupplier(ItemType item) {
