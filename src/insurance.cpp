@@ -25,18 +25,21 @@ void Insurance::run() {
 }
 
 void Insurance::receiveContributions() {
-
-    // TODO
-
+    money += INSURANCE_CONTRIBUTION;
 }
 
 void Insurance::invoice(int bill, Seller* who) {
-
-    // TODO
-
+    unpaidBills.emplace_back(who, bill);
 }
 
 void Insurance::payBills() {
 
-    // TODO
+    for (auto bill = unpaidBills.cbegin() ; bill != unpaidBills.cend() ; ++bill) {
+
+        if (bill->second <= money) {
+            bill->first->pay(bill->second);
+            money -= bill->second;
+            unpaidBills.erase(bill);
+        }
+    }
 }

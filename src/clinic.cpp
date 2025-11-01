@@ -81,6 +81,7 @@ void Clinic::payBills() {
         // si on peut la payer, la payer et l'effacer
         if (bill->second <= money) {
             bill->first->pay(bill->second);
+            money -= bill->second;
             unpaidBills.erase(bill);
         }
     }
