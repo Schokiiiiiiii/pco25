@@ -2,7 +2,6 @@
 #include "costs.h"
 #include <pcosynchro/pcothread.h>
 
-
 Insurance::Insurance(int uniqueId, int fund) : Seller(fund, uniqueId) {}
 
 void Insurance::run() {
@@ -29,17 +28,24 @@ void Insurance::receiveContributions() {
 }
 
 void Insurance::invoice(int bill, Seller* who) {
+    billMutex.lock();
     unpaidBills.emplace_back(who, bill);
+    billMutex.unlock();
 }
 
 void Insurance::payBills() {
 
-    for (auto bill = unpaidBills.cbegin() ; bill != unpaidBills.cend() ; ++bill) {
+    billMutex.lock();;
+    auto bill = unpaidBills.begin();
+    while (bill != unpaidBills.end()) {
 
         if (bill->second <= money) {
-            bill->first->pay(bill->second);
             money -= bill->second;
-            unpaidBills.erase(bill);
+            bill->first->pay(bill->second);
+            bill = unpaidBills.erase(bill);
+        } else {
+            ++bill;
         }
     }
+    billMutex.unlock();
 }

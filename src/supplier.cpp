@@ -33,22 +33,43 @@ void Supplier::attemptToProduceResource() {
     const ItemType item = resourcesSupplied.at(rand() % resourcesSupplied.size());
 
     // vérifier si après réduction, on est toujours en positif
-    if (const int newMoney = (money - getEmployeeSalary(getEmployeeThatProduces(item))); newMoney >= 0) {
+    moneyMutex.lock();
+    if (const int salary = getEmployeeSalary(getEmployeeThatProduces(item)); money - salary >= 0) {
 
-        // payer l'employer et ajouter la ressource au stock
-        money = newMoney;
+        // enlever l'argent
+        money -= salary;
+        moneyMutex.unlock(); // mieux de unlock avant de lock un autre mutex au cas où
+
+        // payer l'employé
+        ++nbEmployeesPaid;
+
+        // ajouter au stock
+        stocksMutex.lock();
         ++stocks.at(item);
-    }
+        stocksMutex.unlock();
+
+    } else { moneyMutex.unlock(); }
 }
 
 int Supplier::buy(ItemType it, int qty) {
-    if (qty > stocks.at(it))
+
+    if (!sellsResource(it)) return 0;
+
+    stocksMutex.lock();
+    if (qty > stocks.at(it)) {
+        stocksMutex.unlock();
         return 0;
+    }
+    stocks.at(it) -= qty;
+    stocksMutex.unlock();
+
     return qty * getCostPerUnit(it);
 }
 
 void Supplier::pay(int bill) {
+    moneyMutex.lock();
     money += bill;
+    moneyMutex.unlock();
 }
 
 int Supplier::getMaterialCost() const {

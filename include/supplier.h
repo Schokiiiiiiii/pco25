@@ -101,6 +101,9 @@ private:
 
 private:
     std::vector<ItemType> resourcesSupplied; ///< List of resource types the supplier can produce.
+
+    PcoMutex moneyMutex;    // concurrence entre se faire payer et payer les employés
+    PcoMutex stocksMutex;   // concurrence entre donner son stock et en produire
 };
 
 

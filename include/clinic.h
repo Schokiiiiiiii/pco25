@@ -151,6 +151,9 @@ private:
 
     int queueSick = 0;                            ///< Number of patients waiting for treatment
 
+    PcoMutex moneyMutex;        // concurrence entre recevoir paiements et payer les employés
+    PcoMutex patientsMutex;     // concurrence entre recevoir et guérir/envoyer patients
+
 protected:
     /**
      * @brief Treats a single patient.
