@@ -108,6 +108,7 @@ private:
     int maxBeds;                   ///< Maximum number of patients the hospital can accommodate.
     int nbNursingStaff;            ///< Number of nursing staff employed.
     int nbFreed = 0;               ///< Number of patients who have completed treatment and left the hospital.
+    PcoMutex moneyMutex;           ///< Mutex for protecting fund manipulations
 };
 
 #endif // HOSPITAL_H

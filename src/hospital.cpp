@@ -40,19 +40,25 @@ void Hospital::updateRehab() {
 
 void Hospital::payNursingStaff() {
 
-    // TODO
+    moneyMutex.lock();
+    money -= getEmployeeSalary(EmployeeType::NursingStaff) * nbNursingStaff;
+    moneyMutex.unlock();
+
+    nbEmployeesPaid += nbNursingStaff;
 
 }
 
 void Hospital::pay(int bill) {
-
-    // TODO
-
+    moneyMutex.lock();
+    money += bill;
+    moneyMutex.unlock();
 }
 
 int Hospital::transfer(ItemType what, int qty) {
     
     // TODO
+    // transfer fait le transfert de patients depuis les ambulances, pour autant qu'ill y ait de la place dans l'hopital, et que money soit plus grand que 0
+    // il fait  ausssi le transfert depuis les cliniques, auquel cas le Itemtype deevient brehapatient
 
 }
 
