@@ -41,6 +41,8 @@ void Clinic::run() {
 
 int Clinic::transfer(ItemType what, int qty) {
 
+    if (what != ItemType::SickPatient) return 0;
+
     // si on a pas de facture et de l'argent
     if (unpaidBills.empty() && money > 0) {
 
@@ -48,12 +50,16 @@ int Clinic::transfer(ItemType what, int qty) {
         int endQty = qty;
         while (endQty * getCostPerService(ServiceType::Treatment) < 0) { --endQty; }
 
-        // ajouter le nombre de nouveaux patients et le retourner
-        queueSick += endQty;
+        // ajouter le nombre de nouveaux patients
+        patientsMutex.lock();
+        stocks[ItemType::SickPatient] += endQty;
+        patientsMutex.unlock();
+
+        // retourner le nombre de patients acceptés
         return endQty;
     }
 
-    // sinon retourner 0 patient acceptés
+    // sinon retourner 0 patients acceptés
     return 0;
 }
 
@@ -76,13 +82,26 @@ bool Clinic::hasMoneyForTreatment() const {
 void Clinic::payBills() {
 
     // tourner sur toutes les factures
-    for (auto bill = unpaidBills.cbegin() ; bill != unpaidBills.cend() ; ++bill) {
+    auto bill = unpaidBills.begin();
+    while (bill != unpaidBills.end()) {
 
-        // si on peut la payer, la payer et l'effacer
+        // si on peut la payer
+        moneyMutex.lock();
         if (bill->second <= money) {
-            bill->first->pay(bill->second);
+
+            // enlever l'argent
             money -= bill->second;
-            unpaidBills.erase(bill);
+            moneyMutex.unlock();
+
+            // payer la facture
+            bill->first->pay(bill->second);
+
+            // supprimer l'ancienne facture
+            bill = unpaidBills.erase(bill);
+
+        } else {
+            moneyMutex.unlock();
+            ++bill;
         }
     }
 }
@@ -96,9 +115,8 @@ void Clinic::processNextPatient() {
     // commander le matériel nécessaire
     orderResources();
 
-    // traiter le patient si on peut
-    if (hasMoneyForTreatment() && hasResourcesForTreatment())
-        treatOne();
+    // traiter le patient
+    treatOne();
 }
 
 void Clinic::sendPatientsToRehab() {
@@ -110,9 +128,13 @@ void Clinic::sendPatientsToRehab() {
         if (!stocks[ItemType::RehabPatient]) break;
 
         // demander à l'hôpital et enregistrer le nombre de patients acceptés
+        patientsMutex.lock();
         const int nbAccepted = hospital->transfer(ItemType::RehabPatient, stocks[ItemType::RehabPatient]);
         stocks[ItemType::RehabPatient] -= nbAccepted;
-        invoice(nbAccepted * getCostPerService(ServiceType::Treatment), insurance);
+        patientsMutex.unlock();
+
+        // envoyer la facture à l'assurance
+        insurance->invoice(nbAccepted * getCostPerService(ServiceType::Treatment), this);
     }
 }
 
@@ -127,7 +149,7 @@ void Clinic::orderResources() {
 
                 // arrêter si on nous en vend 1 et enregistrer la vente
                 if (int price = supplier->buy(item, 1); price > 0) {
-                    stocks.at(item) += 1;
+                    stocks[item] += 1;
                     unpaidBills.emplace_back(dynamic_cast<Supplier *>(supplier), price);
                     break;
                 }
@@ -138,20 +160,30 @@ void Clinic::orderResources() {
 
 void Clinic::treatOne() {
 
-    // enlever un item de chaque
-    for (ItemType item : resourcesNeeded)
-        --stocks.at(item);
+    moneyMutex.lock();
+    patientsMutex.lock();
+    if (hasMoneyForTreatment() && hasResourcesForTreatment()) {
 
-    // guérir le patient
-    --stocks[ItemType::SickPatient];
-    ++stocks[ItemType::RehabPatient];
+        // enlever un item de chaque
+        for (ItemType item : resourcesNeeded)
+            --stocks[item];
 
-    // payer le spécialiste
-    money -= getEmployeeSalary(EmployeeType::TreatmentSpecialist);
+        // guérir le patient
+        --stocks[ItemType::SickPatient];
+        ++stocks[ItemType::RehabPatient];
+
+        // payer le spécialiste
+        money -= getEmployeeSalary(EmployeeType::TreatmentSpecialist);
+        ++nbEmployeesPaid;
+    }
+    patientsMutex.unlock();
+    moneyMutex.unlock();
 }
 
 void Clinic::pay(int bill) {
+    moneyMutex.lock();
     money += bill;
+    moneyMutex.unlock();
 }
 
 Supplier *Clinic::chooseRandomSupplier(ItemType item) {

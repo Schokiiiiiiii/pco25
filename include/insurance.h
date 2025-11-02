@@ -86,6 +86,8 @@ private:
 
 private:
     std::vector<std::pair<Seller*, int>> unpaidBills; ///< List of healthcare providers (Sellers) awaiting payment and their corresponding bill amounts.
+
+    PcoMutex billMutex;     // concurrence entre recevoir des factures et les payer
 };
 
 #endif // INSURANCE_H
