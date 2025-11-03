@@ -58,18 +58,16 @@ int Hospital::transfer(ItemType what, int qty) {
     
     // transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money soit plus grand que 0
     // il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabpatient
+    int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
+    int isAdded = (freeBeds > qty ? qty : freeBeds);
 
-    if (!(dynamic_cast<int>(what)) && money >= 0) { // dans l'enum class itemtype, sickpatient = 0
-        int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
-        int isAdded = (freeBeds > qty ? qty : freeBeds);
-        stocks[ItemType::SickPatient] += isAdded;
+    // dans l'enum class itemtype, sickpatient = 0 et rehabpatient = 1
+    if (money >= 0 && (dynamic_cast<int>(what) == 0 || dynamic_cast<int>(what) == 1)) {
+        stocks[what] += isAdded;
         return isAdded;
     }
-    // on espère que transfer n'est pas appelé avec autre chose que des patients
-    else {
-
-    }
-
+    // impossible de transférer autre choses que des patients
+    return 0;
 }
 
 int Hospital::getNumberPatients() {
