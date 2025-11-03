@@ -35,12 +35,17 @@ void Hospital::transferSickPatientsToClinic() {
     sickMutex.lock();
     stocks[ItemType::SickPatient] -= sickTransfered;
     sickMutex.unlock();
+
+    insurance->invoice(sickTransfered * getCostPerService(ServiceType::PreTreatmentStay), this);
 }
 
 void Hospital::updateRehab() {
 
     // TODO
 
+    int rehabTransfered;
+
+    insurance->invoice(rehabTransfered * getCostPerService(ServiceType::Rehab), this);
 }
 
 void Hospital::payNursingStaff() {
@@ -59,8 +64,8 @@ void Hospital::pay(int bill) {
     moneyMutex.unlock();
 }
 
-// transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money soit plus grand que 0
-// il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabpatient
+// transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money ne soit pas négatif
+// il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabPatient
 int Hospital::transfer(ItemType what, int qty) {
 
     int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
