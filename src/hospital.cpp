@@ -3,6 +3,8 @@
 #include "costs.h"
 #include <pcosynchro/pcothread.h>
 
+static int rehabPatientsYesterday = 0;
+
 Hospital::Hospital(int id, int fund, int maxBeds)
 : Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) { // le nombre de staff est égal au nombre max de lits
     stocks[ItemType::SickPatient] = 0;
@@ -41,9 +43,17 @@ void Hospital::transferSickPatientsToClinic() {
 
 void Hospital::updateRehab() {
 
-    // TODO
+    int index = clock->current_day() % 5; // séjour de convalescence 5 jours, inclus ou exclus?
+    int rehabTransfered = rehabSchedule[index];
 
-    int rehabTransfered;
+    // section critique
+    rehabMutex.lock();
+    rehabSchedule[index] = (stocks[ItemType::RehabPatient] - rehabPatientsYesterday > 0 ? stocks[ItemType::RehabPatient] - rehabPatientsYesterday : 0);
+    rehabPatientsYesterday = stocks[ItemType::RehabPatient];
+
+    stocks[ItemType::RehabPatient] -= rehabTransfered;
+    rehabMutex.unlock();
+    // fin section critique
 
     insurance->invoice(rehabTransfered * getCostPerService(ServiceType::Rehab), this);
 }
