@@ -3,6 +3,7 @@
 #include "costs.h"
 #include <pcosynchro/pcothread.h>
 
+// correspond au nombre de patients en rehab que comptait l'hopital le jour précédent la simulation
 static int rehabPatientsYesterday = 0;
 
 Hospital::Hospital(int id, int fund, int maxBeds)
@@ -29,9 +30,9 @@ void Hospital::run() {
 }
 
 void Hospital::transferSickPatientsToClinic() {
-    // y a pas une condition sur le nombre transféré vers les cliniques?
     auto *clinic = chooseRandomSeller(clinics);
 
+    // sans limite  de taille de transfert vers les cliniques, on tente de transférer tous nos sickPatients et on verra ce qu'elles acceptent
     int sickTransfered = clinic->transfer(ItemType::SickPatient, stocks[ItemType::SickPatient]);
 
     sickMutex.lock();
@@ -42,12 +43,13 @@ void Hospital::transferSickPatientsToClinic() {
 }
 
 void Hospital::updateRehab() {
-
     int index = clock->current_day() % 5; // séjour de convalescence 5 jours, inclus ou exclus?
     int rehabTransfered = rehabSchedule[index];
 
     // section critique
     rehabMutex.lock();
+
+    // le tableau rehabSchedule stock le nombre de rehabPatient qui reviennent à l'hopital un jour donné
     rehabSchedule[index] = (stocks[ItemType::RehabPatient] - rehabPatientsYesterday > 0 ? stocks[ItemType::RehabPatient] - rehabPatientsYesterday : 0);
     rehabPatientsYesterday = stocks[ItemType::RehabPatient];
 
