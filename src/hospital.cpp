@@ -27,10 +27,13 @@ void Hospital::run() {
 }
 
 void Hospital::transferSickPatientsToClinic() {
+    // y a pas une condition sur le nombre transféré vers les cliniques?
+    auto *clinic = chooseRandomSeller(clinics);
 
-    // y a pas une condition sur le transfert vers les cliniques?
+    int sickTransfered = clinic->transfer(ItemType::SickPatient, stocks[ItemType::SickPatient]);
+
     sickMutex.lock();
-    stocks[ItemType::SickPatient] = 0;
+    stocks[ItemType::SickPatient] -= sickTransfered;
     sickMutex.unlock();
 }
 
