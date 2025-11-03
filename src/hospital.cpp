@@ -4,7 +4,7 @@
 #include <pcosynchro/pcothread.h>
 
 Hospital::Hospital(int id, int fund, int maxBeds)
-: Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) {
+: Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) { // le nombre de staff est égal au nombre max de lits
     stocks[ItemType::SickPatient] = 0;
     stocks[ItemType::RehabPatient] = 0;
 }
@@ -56,9 +56,19 @@ void Hospital::pay(int bill) {
 
 int Hospital::transfer(ItemType what, int qty) {
     
-    // TODO
-    // transfer fait le transfert de patients depuis les ambulances, pour autant qu'ill y ait de la place dans l'hopital, et que money soit plus grand que 0
-    // il fait  ausssi le transfert depuis les cliniques, auquel cas le Itemtype deevient brehapatient
+    // transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money soit plus grand que 0
+    // il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabpatient
+
+    if (!(dynamic_cast<int>(what)) && money >= 0) { // dans l'enum class itemtype, sickpatient = 0
+        int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
+        int isAdded = (freeBeds > qty ? qty : freeBeds);
+        stocks[ItemType::SickPatient] += isAdded;
+        return isAdded;
+    }
+    // on espère que transfer n'est pas appelé avec autre chose que des patients
+    else {
+
+    }
 
 }
 
