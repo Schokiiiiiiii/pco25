@@ -28,8 +28,10 @@ void Hospital::run() {
 
 void Hospital::transferSickPatientsToClinic() {
 
-    // TODO
-
+    // y a pas une condition sur le transfert vers les cliniques?
+    sickMutex.lock();
+    stocks[ItemType::SickPatient] = 0;
+    sickMutex.unlock();
 }
 
 void Hospital::updateRehab() {
@@ -39,35 +41,46 @@ void Hospital::updateRehab() {
 }
 
 void Hospital::payNursingStaff() {
-
+    // the staff gets paid in any case
     moneyMutex.lock();
     money -= getEmployeeSalary(EmployeeType::NursingStaff) * nbNursingStaff;
     moneyMutex.unlock();
 
     nbEmployeesPaid += nbNursingStaff;
-
 }
 
+// hospital gets paid
 void Hospital::pay(int bill) {
     moneyMutex.lock();
     money += bill;
     moneyMutex.unlock();
 }
 
+// transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money soit plus grand que 0
+// il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabpatient
 int Hospital::transfer(ItemType what, int qty) {
-    
-    // transfer fait le transfert de patients depuis les ambulances, pour autant qu'il y ait de la place dans l'hopital, et que money soit plus grand que 0
-    // il fait aussi le transfert depuis les cliniques, auquel cas le Itemtype devient rehabpatient
+
     int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
     int isAdded = (freeBeds > qty ? qty : freeBeds);
 
     // dans l'enum class itemtype, sickpatient = 0 et rehabpatient = 1
-    if (money >= 0 && (dynamic_cast<int>(what) == 0 || dynamic_cast<int>(what) == 1)) {
-        stocks[what] += isAdded;
-        return isAdded;
+    if (money >= 0) {
+        switch (what) {
+        case ItemType::SickPatient:
+            sickMutex.lock();
+            stocks[what] += isAdded;
+            sickMutex.unlock();
+            return isAdded;
+        case ItemType::RehabPatient:
+            rehabMutex.lock();
+            stocks[what] += isAdded;
+            rehabMutex.unlock();
+            return isAdded;
+        default:
+            break;
+        }
     }
-    // impossible de transférer autre choses que des patients
-    return 0;
+    return 0; // impossible de transférer autre choses que des patients
 }
 
 int Hospital::getNumberPatients() {

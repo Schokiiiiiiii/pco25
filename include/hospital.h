@@ -109,6 +109,8 @@ private:
     int nbNursingStaff;            ///< Number of nursing staff employed.
     int nbFreed = 0;               ///< Number of patients who have completed treatment and left the hospital.
     PcoMutex moneyMutex;           ///< Mutex for protecting fund manipulations
+    PcoMutex sickMutex;            ///< Mutex for protecting stocks of sick patients manipulations
+    PcoMutex rehabMutex;           ///< Mutex for protecting stocks of rehab patients manipulations
 };
 
 #endif // HOSPITAL_H
