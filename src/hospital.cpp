@@ -4,7 +4,7 @@
 #include <pcosynchro/pcothread.h>
 
 // correspond au nombre de patients en rehab que comptait l'hopital le jour précédent la simulation
-static int rehabPatientsYesterday = 0;
+static int totalRehabYesterday = 0;
 
 Hospital::Hospital(int id, int fund, int maxBeds)
 : Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) { // le nombre de staff est égal au nombre max de lits
@@ -44,24 +44,23 @@ void Hospital::transferSickPatientsToClinic() {
 
 void Hospital::updateRehab() {
     int index = clock->current_day() % 5; // séjour de convalescence 5 jours, inclus ou exclus?
-    int rehabTransfered = rehabSchedule[index];
+    int rehabTransfered = rehabSchedule[index]; // rehabSchedule contient le nombre de rehabPatients qui reviennent à l'hopital chaque jour
 
-    // section critique
     rehabMutex.lock();
-
     // le tableau rehabSchedule stock le nombre de rehabPatient qui reviennent à l'hopital un jour donné
-    rehabSchedule[index] = (stocks[ItemType::RehabPatient] - rehabPatientsYesterday > 0 ? stocks[ItemType::RehabPatient] - rehabPatientsYesterday : 0);
-    rehabPatientsYesterday = stocks[ItemType::RehabPatient];
+    rehabSchedule[index] = (stocks[ItemType::RehabPatient] - totalRehabYesterday > 0 ? stocks[ItemType::RehabPatient] - totalRehabYesterday : 0);
+    totalRehabYesterday = stocks[ItemType::RehabPatient];
 
     stocks[ItemType::RehabPatient] -= rehabTransfered;
     rehabMutex.unlock();
-    // fin section critique
+
+    nbFreed += rehabTransfered;
 
     insurance->invoice(rehabTransfered * getCostPerService(ServiceType::Rehab), this);
 }
 
 void Hospital::payNursingStaff() {
-    // the staff gets paid in any case
+    // les employés sont payés en toutes circonstances
     moneyMutex.lock();
     money -= getEmployeeSalary(EmployeeType::NursingStaff) * nbNursingStaff;
     moneyMutex.unlock();
@@ -69,7 +68,7 @@ void Hospital::payNursingStaff() {
     nbEmployeesPaid += nbNursingStaff;
 }
 
-// hospital gets paid
+// l'hopital est remboursé
 void Hospital::pay(int bill) {
     moneyMutex.lock();
     money += bill;
