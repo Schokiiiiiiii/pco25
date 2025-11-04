@@ -5,7 +5,7 @@
 
 // le nombre d'ambulances par défaut est 2, comme défini dans le main
 
-static PcoMutex sickMutex; // ce mutex régit le nombre de patients malades, qui sont partagés entre les ambulances
+PcoMutex sickMutex; // ce mutex régit le nombre de patients malades, qui sont partagés entre les ambulances
 
 Ambulance::Ambulance(int id, int fund, std::vector<ItemType> resourcesSupplied, std::map<ItemType, int> initialStocks)
     : Seller(fund, id), resourcesSupplied(resourcesSupplied) {
