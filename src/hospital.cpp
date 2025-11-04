@@ -3,8 +3,8 @@
 #include "costs.h"
 #include <pcosynchro/pcothread.h>
 
-// correspond au nombre de patients en rehab que comptait l'hopital le jour précédent la simulation
-static int totalRehabYesterday = 0;
+// correspond au nombre de patients en rehab que comptait l'hopital à la fin du jour précédent la simulation
+static int rehabYesterdayNight = 0;
 
 Hospital::Hospital(int id, int fund, int maxBeds)
 : Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) { // le nombre de staff est égal au nombre max de lits
@@ -44,14 +44,16 @@ void Hospital::transferSickPatientsToClinic() {
 
 void Hospital::updateRehab() {
     int index = clock->current_day() % 5; // séjour de convalescence 5 jours, inclus ou exclus?
-    int rehabTransfered = rehabSchedule[index]; // rehabSchedule contient le nombre de rehabPatients qui reviennent à l'hopital chaque jour
+    int rehabTransfered = rehabSchedule[index]; // rehabSchedule contient le nombre de rehabPatients qui arrivent à l'hopital chaque jour
 
     rehabMutex.lock();
     // le tableau rehabSchedule stock le nombre de rehabPatient qui reviennent à l'hopital un jour donné
-    rehabSchedule[index] = (stocks[ItemType::RehabPatient] - totalRehabYesterday > 0 ? stocks[ItemType::RehabPatient] - totalRehabYesterday : 0);
-    totalRehabYesterday = stocks[ItemType::RehabPatient];
+    rehabSchedule[index] = stocks[ItemType::RehabPatient] - rehabYesterdayNight; // ici, on voudrait avoir fait le transfert avant d'arriver là,
+                                                                                 // sinon, rehabTransfered sera égal à 0
 
     stocks[ItemType::RehabPatient] -= rehabTransfered;
+
+    rehabYesterdayNight = stocks[ItemType::RehabPatient];
     rehabMutex.unlock();
 
     nbFreed += rehabTransfered;
