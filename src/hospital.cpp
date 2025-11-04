@@ -64,7 +64,7 @@ void Hospital::updateRehab() {
 void Hospital::payNursingStaff() {
     // les employés sont payés en toutes circonstances
     moneyMutex.lock();
-    money -= getEmployeeSalary(EmployeeType::NursingStaff) * nbNursingStaff;
+    money -= (getEmployeeSalary(EmployeeType::NursingStaff) * nbNursingStaff);
     moneyMutex.unlock();
 
     nbEmployeesPaid += nbNursingStaff;
@@ -84,21 +84,23 @@ int Hospital::transfer(ItemType what, int qty) {
     int freeBeds = maxBeds - stocks[ItemType::SickPatient] - stocks[ItemType::RehabPatient];
     int isAdded = (freeBeds > qty ? qty : freeBeds);
 
-    // dans l'enum class itemtype, sickpatient = 0 et rehabpatient = 1
+    // dans l'enum class itemType, sickPatient = 0 et rehabPatient = 1
     if (money >= 0) {
-        switch (what) {
-        case ItemType::SickPatient:
-            sickMutex.lock();
-            stocks[what] += isAdded;
-            sickMutex.unlock();
-            return isAdded;
-        case ItemType::RehabPatient:
-            rehabMutex.lock();
-            stocks[what] += isAdded;
-            rehabMutex.unlock();
-            return isAdded;
-        default:
-            break;
+        switch (what) { // on a besoin de différencier le type de patient pour utiliser le bon mutex
+            case ItemType::SickPatient:
+                sickMutex.lock();
+                stocks[what] += isAdded;
+                sickMutex.unlock();
+                return isAdded;
+
+            case ItemType::RehabPatient:
+                rehabMutex.lock();
+                stocks[what] += isAdded;
+                rehabMutex.unlock();
+                return isAdded;
+
+            default:
+                break;
         }
     }
     return 0; // impossible de transférer autre choses que des patients
