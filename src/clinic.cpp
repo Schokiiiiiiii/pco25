@@ -120,12 +120,10 @@ void Clinic::processNextPatient() {
 }
 
 void Clinic::sendPatientsToRehab() {
+    // si on a plus de patients arrêter
+    if (stocks[ItemType::RehabPatient]) {
 
-    // tourner sur tous les hôpitaux
-    for (Seller* hospital : hospitals) {
-
-        // si on a plus de patients arrêter
-        if (!stocks[ItemType::RehabPatient]) break;
+        auto *hospital = chooseRandomSeller(hospitals);
 
         // demander à l'hôpital et enregistrer le nombre de patients acceptés
         patientsMutex.lock();
@@ -139,20 +137,17 @@ void Clinic::sendPatientsToRehab() {
 }
 
 void Clinic::orderResources() {
-
     // si on a besoin de l'item
     for (const auto& item : resourcesNeeded) {
         if (stocks.at(item) < 1) {
 
-            // demander à chaque seller pour une unité
-            for (Seller* supplier : suppliers) {
+            // choisir un supplier qui a la ressource
+            auto *supplier = chooseRandomSupplier(item);
 
-                // arrêter si on nous en vend 1 et enregistrer la vente
-                if (int price = supplier->buy(item, 1); price > 0) {
-                    stocks[item] += 1;
-                    unpaidBills.emplace_back(dynamic_cast<Supplier *>(supplier), price);
-                    break;
-                }
+            // on laisse cette ligne au cas ou on veut commander plus que 1
+            if (int price = supplier->buy(item, 1); price > 0) {
+                stocks[item] += 1;
+                unpaidBills.emplace_back(dynamic_cast<Supplier *>(supplier), price);
             }
         }
     }
