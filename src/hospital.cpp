@@ -45,7 +45,7 @@ void Hospital::transferSickPatientsToClinic() {
 }
 
 void Hospital::updateRehab() {
-    int index = (++currentDay) % 4; // séjour de convalescence 5 jours, inclus ou exclus?
+    int index = (++currentDay) % std::size(rehabSchedule); // séjour de convalescence
     int rehabTransfered = rehabSchedule[index]; // rehabSchedule contient le nombre de rehabPatients qui arrivent à l'hopital chaque jour
 
     rehabMutex.lock();
