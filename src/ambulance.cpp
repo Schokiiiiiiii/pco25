@@ -29,41 +29,39 @@ void Ambulance::run() {
 }
 
 void Ambulance::sendPatients() {
-    // Choisir un hôpital au hasard
-    auto *hospital = chooseRandomSeller(hospitals);
+    if (stocks[ItemType::SickPatient]) {
 
-    // Déterminer le nombre de patients à envoyer
-    int nbPatientsToTransfer = 1 + rand() % 5;
+        // Choisir un hôpital au hasard
+        auto *hospital = chooseRandomSeller(hospitals);
 
-    if (int salary = getEmployeeSalary(EmployeeType::EmergencyStaff); money >= salary) {
+        // Déterminer le nombre de patients à envoyer
+        int nbPatientsToTransfer = 1 + rand() % 5;
+        while (nbPatientsToTransfer > stocks[ItemType::SickPatient]) nbPatientsToTransfer = 1 + rand() % 5;
 
-        int nbPatientsTransferred = hospital->transfer(ItemType::SickPatient, nbPatientsToTransfer);
 
-        // section critique
+        // attention, money peut augmenter et baisser en même temps donc il faut un mutex par instance
         moneyMutex.lock();
-        money -= salary; // attention, money peut augmenter et baisser en même temps donc il faut un mutex par instance
-        moneyMutex.unlock();
-        // fin section critique
+        if (int salary = getEmployeeSalary(EmployeeType::EmergencyStaff); money >= salary) {
+            int nbPatientsTransferred = hospital->transfer(ItemType::SickPatient, nbPatientsToTransfer);
 
-        // section critique
-        sickMutex.lock();
-        stocks.at(ItemType::SickPatient) -= nbPatientsTransferred;
-        sickMutex.unlock();
-        // fin section critique
+            money -= salary;
+            moneyMutex.unlock();
 
-        insurance->invoice(getCostPerService(ServiceType::Transport), this);
-        nbEmployeesPaid++;
+            sickMutex.lock();
+            stocks.at(ItemType::SickPatient) -= nbPatientsTransferred;
+            sickMutex.unlock();
+
+            insurance->invoice(nbPatientsTransferred * getCostPerService(ServiceType::Transport), this);
+            nbEmployeesPaid++;
+        }
+        else moneyMutex.unlock();
     }
-
 }
 
 void Ambulance::pay(int bill) {
-
-    // section critique
     moneyMutex.lock();
     money += bill;
     moneyMutex.unlock();
-    // fin section critique
 }
 
 void Ambulance::setHospitals(std::vector<Seller *> h) { hospitals = std::move(h); } // à appeller dans hospital.cpp?

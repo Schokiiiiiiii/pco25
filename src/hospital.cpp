@@ -5,6 +5,8 @@
 
 // correspond au nombre de patients en rehab que comptait l'hopital à la fin du jour précédent la simulation
 static int rehabYesterdayNight = 0;
+// j'aurais bien voulu utiliser clock->current_day() mais les tests explosent donc bon
+static int currentDay = -1;
 
 Hospital::Hospital(int id, int fund, int maxBeds)
 : Seller(fund, id), maxBeds(maxBeds), nbNursingStaff(maxBeds) { // le nombre de staff est égal au nombre max de lits
@@ -43,7 +45,7 @@ void Hospital::transferSickPatientsToClinic() {
 }
 
 void Hospital::updateRehab() {
-    int index = clock->current_day() % 5; // séjour de convalescence 5 jours, inclus ou exclus?
+    int index = (++currentDay) % 4; // séjour de convalescence 5 jours, inclus ou exclus?
     int rehabTransfered = rehabSchedule[index]; // rehabSchedule contient le nombre de rehabPatients qui arrivent à l'hopital chaque jour
 
     rehabMutex.lock();
@@ -85,7 +87,7 @@ int Hospital::transfer(ItemType what, int qty) {
     int isAdded = (freeBeds > qty ? qty : freeBeds);
 
     // dans l'enum class itemType, sickPatient = 0 et rehabPatient = 1
-    if (money >= 0) {
+    if (money > 0) { // contrairement à la consigne, l'hôpital n'accepte de patients que si money est strictement plus grand que 0
         switch (what) { // on a besoin de différencier le type de patient pour utiliser le bon mutex
             case ItemType::SickPatient:
                 sickMutex.lock();

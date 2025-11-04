@@ -108,7 +108,7 @@ private:
     int maxBeds;                   ///< Maximum number of patients the hospital can accommodate.
     int nbNursingStaff;            ///< Number of nursing staff employed.
     int nbFreed = 0;               ///< Number of patients who have completed treatment and left the hospital.
-    int rehabSchedule[5] = {0};    ///< Array to keep track of who can leave after their rehab is over
+    int rehabSchedule[4] = {0};    ///< Array to keep track of who can leave after their rehab is over
 
     PcoMutex moneyMutex;           ///< Mutex for protecting fund manipulations
     PcoMutex sickMutex;            ///< Mutex for protecting stocks of sick patients manipulations

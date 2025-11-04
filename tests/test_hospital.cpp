@@ -98,18 +98,19 @@ TEST_F(HospitalFixture, ReceivesSickPatientsRespectingFundsAndBeds) {
 }
 
 TEST_F(HospitalFixture, ReceivesRehabPatientsStartsTimers) {
-    int got = hosp->transfer(ItemType::RehabPatient, 3);
+    int got = this->hosp->transfer(ItemType::RehabPatient, 3);
     EXPECT_EQ(got, 3);
-    EXPECT_EQ(hosp->stocks[ItemType::RehabPatient], 3);
+    EXPECT_EQ(this->hosp->stocks[ItemType::RehabPatient], 3);
 
-    int startFund = hosp->money;
-    for (int day = 0; day < 5; ++day) hosp->updateRehab();
+    int startFund = this->hosp->money;
+    for (int day = 0; day < 5; ++day)
+        this->hosp->updateRehab();
 
-    EXPECT_EQ(hosp->stocks[ItemType::RehabPatient], 0);
-    EXPECT_EQ(hosp->getNumberPatients(), 3);
+    EXPECT_EQ(this->hosp->stocks[ItemType::RehabPatient], 0);
+    EXPECT_EQ(this->hosp->getNumberPatients(), 3);
 
     int rehabPrice = getCostPerService(ServiceType::Rehab);
-    EXPECT_EQ(hosp->money, startFund + 3 * rehabPrice);
+    EXPECT_EQ(this->hosp->money, startFund + 3 * rehabPrice);
 }
 
 TEST_F(HospitalFixture, payNursingStaffDeductsMoneyAndCountsEmployees) {
