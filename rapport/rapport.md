@@ -38,6 +38,8 @@ La deuxième ressource à protéger est un peu plus intéressant
 puisqu'elle est partagée entre toutes les ambulances; il s'agit du **stocks** de patients malades. Pour protéger
 cette ressource, nous créons donc un mutex static qui est donc unique et partagé parmi toutes les ambulances.
 
+<div style="page-break-before: always;"></div>
+
 ### Hospital
 
 Dans hospital.cpp, il y a trois éléments à protéger à l'aide de mutex. Etant donné que nous ne savons pas quand
@@ -77,6 +79,8 @@ nous paie.
 
 Il faut également avoir un mutex pour **stocks**. On peut lorsqu'on produit une ressource avoir un hopital qui nous en
 achète.
+
+<div style="page-break-before: always;"></div>
 
 ### Insurance
 
