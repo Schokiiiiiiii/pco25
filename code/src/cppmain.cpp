@@ -40,7 +40,7 @@ int cmain()
      ************/
 
     //Choix de la maquette (A ou B)
-    selection_maquette(MAQUETTE_A /*MAQUETTE_B*/);
+    selection_maquette(/*MAQUETTE_A*/ MAQUETTE_B);
 
     /**********************************
      * Initialisation des aiguillages *
@@ -63,18 +63,18 @@ int cmain()
     diriger_aiguillage(10, TOUT_DROIT, 0);
     diriger_aiguillage(11, TOUT_DROIT, 0);
     diriger_aiguillage(12, TOUT_DROIT, 0);
-    diriger_aiguillage(13, TOUT_DROIT, 0);
-    diriger_aiguillage(14, DEVIE     , 0);
-    diriger_aiguillage(15, DEVIE     , 0);
+    diriger_aiguillage(13, DEVIE     , 0);
+    diriger_aiguillage(14, TOUT_DROIT, 0);
+    diriger_aiguillage(15, TOUT_DROIT, 0);
     diriger_aiguillage(16, TOUT_DROIT, 0);
     diriger_aiguillage(17, TOUT_DROIT, 0);
-    diriger_aiguillage(18, TOUT_DROIT, 0);
-    diriger_aiguillage(19, TOUT_DROIT, 0);
-    diriger_aiguillage(20, DEVIE     , 0);
-    diriger_aiguillage(21, DEVIE     , 0);
-    diriger_aiguillage(22, TOUT_DROIT, 0);
-    diriger_aiguillage(23, TOUT_DROIT, 0);
-    diriger_aiguillage(24, TOUT_DROIT, 0);
+    // diriger_aiguillage(18, TOUT_DROIT, 0);
+    // diriger_aiguillage(19, TOUT_DROIT, 0);
+    // diriger_aiguillage(20, DEVIE     , 0);
+    // diriger_aiguillage(21, DEVIE     , 0);
+    // diriger_aiguillage(22, TOUT_DROIT, 0);
+    // diriger_aiguillage(23, TOUT_DROIT, 0);
+    // diriger_aiguillage(24, TOUT_DROIT, 0);
 
     // diriger_aiguillage(/*NUMERO*/, /*TOUT_DROIT | DEVIE*/, /*0*/);
 
@@ -84,11 +84,11 @@ int cmain()
 
     // Loco 0
     // Exemple de position de départ
-    locoA.fixerPosition(34, 5);
+    locoA.fixerPosition(18, 23);
 
     // Loco 1
     // Exemple de position de départ
-    locoB.fixerPosition(31, 1);
+    locoB.fixerPosition(13, 14);
 
     /***********
      * Message *
