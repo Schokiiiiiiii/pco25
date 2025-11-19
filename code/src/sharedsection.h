@@ -39,9 +39,7 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() {
-        // TODO
-    }
+    SharedSection() = default; // modified - Fabien
 
     /**
      * @brief Request access to the shared section
@@ -49,7 +47,19 @@ public:
      * @param Direction of the locomotive
      */
     void access(Locomotive& loco, Direction d) override {
-        // TODO
+
+        // modified - Fabien
+
+        mutex.acquire();
+        if (occupied) {
+            loco.arreter();
+            ++nbWaiting;
+            mutex.release();
+            left.acquire();
+        } else {
+            occupied = true;
+            mutex.release();
+        }
     }
 
     /**
@@ -58,7 +68,19 @@ public:
      * @param Direction of the locomotive
      */
     void leave(Locomotive& loco, Direction d) override {
-        // TODO
+
+        // modified - Fabien
+
+        // if not occupied, no reason to leave
+        if (occupied == false) {
+            ++countErrors;
+            return;
+        }
+
+        // change occupied to false, but don't release yet
+        mutex.acquire();
+        occupied = false;
+        mutex.release();
     }
 
     /**
@@ -66,7 +88,13 @@ public:
      * @param Locomotive who sent the notification
      */
     void release(Locomotive &loco) override {
-        // TODO
+
+        // modified - Fabien
+
+        mutex.acquire();
+        --nbWaiting;
+        left.release();
+        mutex.release();
     }
 
     /**
@@ -74,6 +102,7 @@ public:
      */
     void stopAll() override {
         // TODO
+
     }
 
     /**
@@ -90,7 +119,11 @@ private:
      * Vous êtes libres d'ajouter des méthodes ou attributs
      * pour implémenter la section partagée.
      */
-
+    PcoSemaphore mutex = PcoSemaphore(1);   // protect occupied
+    PcoSemaphore left = PcoSemaphore(0);    // make second train wait until it is released (
+    bool occupied = false;                    // tells if there is a train in the section
+    int nbWaiting = 0;
+    int countErrors = 0;
 };
 
 
