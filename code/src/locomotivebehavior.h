@@ -26,7 +26,7 @@ public:
      */
     LocomotiveBehavior(Locomotive& loco,
                        std::shared_ptr<SharedSectionInterface> sharedSection,
-                       std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> contactPoints,
+                       std::pair<SharedSectionInterface::Direction, u_short> contactPoints[4],
                        SharedSectionInterface::Direction direction) :
         loco(loco),
         sharedSection(sharedSection),
@@ -63,7 +63,7 @@ protected:
     /**
      * @brief contactPoints Points de contacts importants concernant la section partagée
      */
-    std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> contactPoints;
+    std::pair<SharedSectionInterface::Direction, u_short> contactPoints[4];
 
     /**
      * @brief direction de la locomotive

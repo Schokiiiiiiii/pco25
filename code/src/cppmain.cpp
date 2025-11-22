@@ -83,11 +83,12 @@ int cmain()
      *************************************************************************/
 
     // Le sens D1 est le sens dans lequel les locos commencent, càd le sens horaire
-    std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> aContacts = {{SharedSectionInterface::Direction::D1, 12},
+    std::pair<SharedSectionInterface::Direction, u_short> aContacts[4] = {{SharedSectionInterface::Direction::D1, 12},
                                                                                       {SharedSectionInterface::Direction::D1, 4},
                                                                                       {SharedSectionInterface::Direction::D2, 5},
                                                                                       {SharedSectionInterface::Direction::D2, 11}};
-    std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> bContacts = {{SharedSectionInterface::Direction::D1, 10},
+
+    std::pair<SharedSectionInterface::Direction, u_short> bContacts[4] = {{SharedSectionInterface::Direction::D1, 10},
                                                                                       {SharedSectionInterface::Direction::D1, 4},
                                                                                       {SharedSectionInterface::Direction::D2, 3},
                                                                                       {SharedSectionInterface::Direction::D2, 11}};

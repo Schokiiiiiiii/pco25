@@ -10,6 +10,7 @@
 
 #include "locomotivebehavior.h"
 #include "ctrain_handler.h"
+#include "sharedsection.h"
 
 void LocomotiveBehavior::run()
 {
@@ -26,10 +27,29 @@ void LocomotiveBehavior::run()
     //sharedSection->stopAtStation(loco);
 
     while(true) {
-        // On attend qu'une locomotive arrive sur le contact 1.
-        // Pertinent de faire ça dans les deux threads? Pas sûr...
-        attendre_contact(1);
-        loco.afficherMessage("J'ai atteint le contact 1");
+
+        int pointAccess = 0; // c'est vraiment du bricolage, y a sûrement un meilleur moyen de faire
+                            // en l'occurence ça marche par coincidence, grâce au circuit qu'on a choisi
+
+        if (direction == SharedSectionInterface::Direction::D1) {
+            for (std::pair<SharedSectionInterface::Direction, u_short> contact : contactPoints) {
+                if (contact.first == direction && contact.second > pointAccess) {
+                    pointAccess = contact.second;
+                }
+            }
+        }
+        else {
+            pointAccess = 100;
+            for (std::pair<SharedSectionInterface::Direction, u_short> contact : contactPoints) {
+                if (contact.first == direction && contact.second < pointAccess) {
+                    pointAccess = contact.second;
+                }
+            }
+        }
+        attendre_contact(pointAccess);
+        sharedSection->access(loco, direction);
+        //loco.afficherMessage("J'ai atteint le contact " + std::to_string(pointAccess));
+        loco.afficherMessage("J'ai atteint le point d'entrée de la section partagée");
     }
 }
 
