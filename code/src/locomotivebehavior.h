@@ -24,13 +24,14 @@ public:
      * \brief locomotiveBehavior Constructeur de la classe
      * \param loco la locomotive dont on représente le comportement
      */
-    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> contactPoints):
+    LocomotiveBehavior(Locomotive& loco,
+                       std::shared_ptr<SharedSectionInterface> sharedSection,
+                       std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> contactPoints,
+                       SharedSectionInterface::Direction direction) :
         loco(loco),
         sharedSection(sharedSection),
-        contactPoints(contactPoints)
-    {
-        // Eventuel code supplémentaire du constructeur
-    }
+        contactPoints(contactPoints), // ca va marcher de juste le construire comme ca?
+        direction(direction) { /* Eventuel code supplémentaire du constructeur */ }
 
 
 protected:
@@ -64,6 +65,10 @@ protected:
      */
     std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> contactPoints;
 
+    /**
+     * @brief direction de la locomotive
+     */
+    SharedSectionInterface::Direction direction;
     /*
      * Vous êtes libres d'ajouter des méthodes ou attributs
      *
