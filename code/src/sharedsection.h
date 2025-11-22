@@ -39,8 +39,8 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() {
-        // TODO
+    SharedSection() : mutex(1), left(0), occupied(false), nbWaiting(0), countErrors(0) {
+
     }
 
     /**
@@ -49,7 +49,19 @@ public:
      * @param Direction of the locomotive
      */
     void access(Locomotive& loco, Direction d) override {
-        // TODO
+
+        // modified - Fabien
+
+        mutex.acquire();
+        if (occupied) {
+            loco.arreter();
+            ++nbWaiting;
+            mutex.release();
+            left.acquire();
+        } else {
+            occupied = true;
+            mutex.release();
+        }
     }
 
     /**
@@ -58,7 +70,19 @@ public:
      * @param Direction of the locomotive
      */
     void leave(Locomotive& loco, Direction d) override {
-        // TODO
+
+        // modified - Fabien
+
+        // if not occupied, no reason to leave
+        if (occupied == false) {
+            ++countErrors;
+            return;
+        }
+
+        // change occupied to false, but don't release yet
+        mutex.acquire();
+        occupied = false;
+        mutex.release();
     }
 
     /**
@@ -66,7 +90,13 @@ public:
      * @param Locomotive who sent the notification
      */
     void release(Locomotive &loco) override {
-        // TODO
+
+        // modified - Fabien
+
+        mutex.acquire();
+        --nbWaiting;
+        left.release();
+        mutex.release();
     }
 
     /**
@@ -81,8 +111,8 @@ public:
      * @return nbErrors
      */
     int nbErrors() override {
-        // TODO
-        return 0;
+        // protégé par un mutex? comment?
+        return countErrors;
     }
 
 private:
@@ -90,6 +120,10 @@ private:
      * Vous êtes libres d'ajouter des méthodes ou attributs
      * pour implémenter la section partagée.
      */
+
+    PcoSemaphore mutex, left; // une seule instance de sharedSection? ie. static?
+    bool occupied;
+    unsigned int nbWaiting, countErrors; // nbErrors renvoie un int
 
 };
 
