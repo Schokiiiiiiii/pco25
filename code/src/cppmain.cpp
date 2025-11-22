@@ -78,6 +78,20 @@ int cmain()
 
     // diriger_aiguillage(/*NUMERO*/, /*TOUT_DROIT | DEVIE*/, /*0*/);
 
+    /*************************************************************************
+     * Contacts correspondants aux entrées et sorties de la section partagée *
+     *************************************************************************/
+
+    // Le sens D1 est le sens dans lequel les locos commencent, càd le sens horaire
+    std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> aContacts = {{SharedSectionInterface::Direction::D1, 12},
+                                                                                      {SharedSectionInterface::Direction::D1, 4},
+                                                                                      {SharedSectionInterface::Direction::D2, 5},
+                                                                                      {SharedSectionInterface::Direction::D2, 11}};
+    std::array<std::pair<SharedSectionInterface::Direction, u_short>, 4> bContacts = {{SharedSectionInterface::Direction::D1, 10},
+                                                                                      {SharedSectionInterface::Direction::D1, 4},
+                                                                                      {SharedSectionInterface::Direction::D2, 3},
+                                                                                      {SharedSectionInterface::Direction::D2, 11}};
+
     /********************************
      * Position de départ des locos *
      ********************************/
@@ -105,9 +119,9 @@ int cmain()
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
 
     // Création du thread pour la loco 0
-    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection /*, autres paramètres ...*/);
+    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, aContacts /*, autres paramètres */);
     // Création du thread pour la loco 1
-    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection /*, autres paramètres ...*/);
+    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, bContacts /*, autres paramètres */);
 
     // Lanchement des threads
     afficher_message(qPrintable(QString("Lancement thread loco A (numéro %1)").arg(locoA.numero())));
