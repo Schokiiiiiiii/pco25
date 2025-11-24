@@ -79,21 +79,6 @@ int cmain()
 
     // diriger_aiguillage(/*NUMERO*/, /*TOUT_DROIT | DEVIE*/, /*0*/);
 
-    /*************************************************************************
-     * Contacts correspondants aux entrées et sorties de la section partagée *
-     *************************************************************************/
-
-    // Le sens D1 est le sens dans lequel les locos commencent, càd le sens horaire
-    std::pair<SharedSectionInterface::Direction, u_short> aContacts[4] = {{SharedSectionInterface::Direction::D1, 12},
-                                                                                      {SharedSectionInterface::Direction::D1, 4},
-                                                                                      {SharedSectionInterface::Direction::D2, 5},
-                                                                                      {SharedSectionInterface::Direction::D2, 11}};
-
-    std::pair<SharedSectionInterface::Direction, u_short> bContacts[4] = {{SharedSectionInterface::Direction::D1, 10},
-                                                                                      {SharedSectionInterface::Direction::D1, 4},
-                                                                                      {SharedSectionInterface::Direction::D2, 3},
-                                                                                      {SharedSectionInterface::Direction::D2, 11}};
-
     /********************************
      * Position de départ des locos *
      ********************************/
