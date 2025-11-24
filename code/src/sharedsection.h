@@ -50,13 +50,36 @@ public:
 
         // modified - Fabien
 
+        // if loco already accessed, cancel
+        if (this->loco == &loco) {
+            ++countErrors;
+            return;
+        }
+
+        // acquire mutex
         mutex.acquire();
+
+        // if it's already occupied
         if (occupied) {
+
+            // wait and add a loco waiting
             loco.arreter();
             ++nbWaiting;
             mutex.release();
+
+            // wait for a signal that loco has left
             left.acquire();
+
+            // replace current loco in the shared section
+            this->loco = &loco;
+            this->direction = d;
+            loco.demarrer();
+
+        // if it's not occupied
         } else {
+
+            // loco enters the shared section
+            this->loco = &loco;
             occupied = true;
             mutex.release();
         }
@@ -71,8 +94,8 @@ public:
 
         // modified - Fabien
 
-        // if not occupied, no reason to leave
-        if (occupied == false) {
+        // if not occupied or wrong loco is leaving or wrong direction, cancel
+        if (occupied == false || this->loco != &loco || this->direction != d) {
             ++countErrors;
             return;
         }
@@ -91,9 +114,24 @@ public:
 
         // modified - Fabien
 
+        // if it didn't call for leave before or not the right loco, cancel
+        if (occupied || this->loco != &loco) {
+            ++countErrors;
+            return;
+        }
+
+        // acquire mutex
         mutex.acquire();
-        --nbWaiting;
-        left.release();
+
+        // if there is a loco waiting release it and change to occupied
+        if (nbWaiting > 0) {
+            --nbWaiting;
+            occupied = true;
+            left.release();
+        } else {
+            this->loco = nullptr;
+        }
+
         mutex.release();
     }
 
@@ -111,6 +149,7 @@ public:
         // maybe if a locomotive enters shared section
         // and there is also one inside it
         // it will block at mutex and then be released and never actually stop
+        nbWaiting = 0;
         mutex.release();
 
         // TODO maybe do sth else ?
@@ -138,6 +177,8 @@ private:
     bool occupied       = false;              // true if there is a locomotive in the shared section, false otherwise
     int nbWaiting       = 0;                  // number of locomotives waiting to access shared section
     int countErrors     = 0;                  // count the number of errors because of wrong calls to SharedSection
+    Locomotive *loco    = nullptr;            // current loco in the section
+    Direction direction = Direction::D1;      // direction of the loco inside the section (by default D1)
 };
 
 
