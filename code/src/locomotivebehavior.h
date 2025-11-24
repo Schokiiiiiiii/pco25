@@ -14,6 +14,8 @@
 #include "launchable.h"
 #include "sharedsectioninterface.h"
 
+#include <random>
+
 /**
  * @brief La classe LocomotiveBehavior représente le comportement d'une locomotive
  */
@@ -24,12 +26,14 @@ public:
      * \brief locomotiveBehavior Constructeur de la classe
      * \param loco la locomotive dont on représente le comportement
      */
-    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection):
+    LocomotiveBehavior(Locomotive& loco,
+                       std::shared_ptr<SharedSectionInterface> sharedSection,
+                       std::array<u_short, 4> contactPoints,
+                       SharedSectionInterface::Direction direction) :
         loco(loco),
-        sharedSection(sharedSection)
-    {
-        // Eventuel code supplémentaire du constructeur
-    }
+        sharedSection(sharedSection),
+        contactPoints(contactPoints),
+        direction(direction) { /* Eventuel code supplémentaire du constructeur */ }
 
 
 protected:
@@ -58,6 +62,15 @@ protected:
      */
     std::shared_ptr<SharedSectionInterface> sharedSection;
 
+    /**
+     * @brief contactPoints Points de contacts importants concernant la section partagée
+     */
+    std::array<u_short, 4> contactPoints;
+
+    /**
+     * @brief direction de la locomotive
+     */
+    SharedSectionInterface::Direction direction;
     /*
      * Vous êtes libres d'ajouter des méthodes ou attributs
      *
