@@ -106,8 +106,8 @@ int cmain()
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
 
     // Points de contact d'intérêt
-    std::array<u_short, 4> aContacts = {12, 4, 5, 11};
-    std::array<u_short, 4> bContacts = {10, 4, 3, 11};
+    std::array<u_short, 4> aContacts = {12, 17, 5, 24};
+    std::array<u_short, 4> bContacts = {13, 14, 19, 14};
 
     // Création du thread pour la loco 0
     std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection,
