@@ -55,7 +55,7 @@ public:
         mutex.acquire();
 
         // if loco already accessed, cancel
-        if (this->loco == &loco) {
+        if (this->loco == &loco || stopped) {
             ++countErrors;
             mutex.release();
             return;
@@ -72,7 +72,7 @@ public:
             // wait for a signal that loco has left
             left.acquire();
 
-            // if there was a stopAll, cancel
+            // if there was a stopAll, cancel restart
             if (stopped)
                 return;
 
@@ -163,18 +163,17 @@ public:
 
         // modified - Fabien
 
-        // we release any locomotive waiting so they can stop
+        // acquire mutex so nothing else happens
         mutex.acquire();
+
+        // we stop the possibility to start locos again and release any waiting threads
         stopped = true;
         for (int i = 0 ; i < nbWaiting ; ++i)
             left.release();
-        // maybe if a locomotive enters shared section
-        // and there is also one inside it
-        // it will block at mutex and then be released and never actually stop
         nbWaiting = 0;
-        mutex.release();
 
-        // TODO maybe do sth else ?
+        // release mutex
+        mutex.release();
     }
 
     /**

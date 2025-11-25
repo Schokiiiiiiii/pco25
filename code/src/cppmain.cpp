@@ -14,6 +14,8 @@
 #include "sharedsectioninterface.h"
 #include "sharedsection.h"
 
+#include <pcosynchro/pcothread.h>
+
 // Locomotives :
 // Vous pouvez changer les vitesses initiales, ou utiliser la fonction loco.fixerVitesse(vitesse);
 // Laissez les numéros des locos à 0 et 1 pour ce laboratoire
@@ -23,15 +25,22 @@ static Locomotive locoA(7 /* Numéro (pour commande trains sur maquette réelle)
 // Locomotive B
 static Locomotive locoB(42 /* Numéro (pour commande trains sur maquette réelle) */, 12 /* Vitesse */);
 
+// Shared section to access it from emergency stop
+std::shared_ptr<SharedSectionInterface> sharedSection = nullptr;
+
 //Arret d'urgence
 void emergency_stop() {
 
+    // release all threads inside SharedSection that could start again
+    sharedSection->stopAll();
+
+    // stop all locos
     locoA.arreter();
     locoB.arreter();
 
+    // display stop
     afficher_message("\nSTOP!");
 }
-
 
 //Fonction principale
 int cmain()
@@ -103,7 +112,7 @@ int cmain()
      ********************/
 
     // Création de la section partagée
-    std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
+    sharedSection = std::make_shared<SharedSection>();
 
     // Points de contact d'intérêt
     std::array<u_short, 4> aContacts = {12, 17, 5, 24};
