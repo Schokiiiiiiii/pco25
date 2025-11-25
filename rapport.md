@@ -38,6 +38,8 @@ Le chemin suivi par les locomotives est le suivant
 > - LocoA (rouge) : {18, 17, 12, 11, 4, 5, 24, 23}
 > - LocoB (bleu) : {13 10, 11, 4, 3, 19, 14}
 
+<div style="page-break-before: always;"></div>
+
 ### Mise en place de la SharedSection
 
 Le moyen le plus compréhensible d'implémenter est d'avoir les variables suivantes:
@@ -77,6 +79,8 @@ importants du parcours que nous avons sélectionné pour ces deux trains. Ils co
 et du release, dans les deux sens (le point de leave correspond au point d'accès si nous allons dans l'autre sens).
 Nous avons aussi rajouté comme arguments au constructeur de locomotiveBehavior cet array et la direction de départ de
 la locomotive.
+
+<div style="page-break-before: always;"></div>
 
 ### Mise en place de LocomotiveBehaviour::run
 
@@ -127,6 +131,8 @@ Voici un tableau récapitulatif:
 
 Tous ces tests ont également passé. Nous nous sommes concentré sur SharedSection, car cela semblait le plus important.
 Il paraît difficile de toute façon de faire des tests avec le run() des locos.
+
+<div style="page-break-before: always;"></div>
 
 ## Problèmes survenus
 
