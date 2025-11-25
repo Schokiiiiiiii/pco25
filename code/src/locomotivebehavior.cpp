@@ -37,16 +37,10 @@ int nextPoint(std::array<u_short, 4> contactPoints, SharedSection::Direction dir
         default:
             return previousPoint;
     }
-
-
-    // je pourrais peut etre compacter ces deux morceaux de code avec des clever tricks mais ca le rendrait super illisible donc chai pas
 }
 
 int directionChange() {
-    int change = 0;
-    auto gen = std::bind(std::uniform_int_distribution<>(0, 1), std::default_random_engine());
-    for (int i = 0; i < 10; ++i) change += gen(); // pas random sur la vm
-    return change % 2;
+    return rand() % 2;
 }
 
 void LocomotiveBehavior::run()
@@ -56,17 +50,29 @@ void LocomotiveBehavior::run()
     loco.demarrer();
     loco.afficherMessage("Ready!");
 
-    static int directionCompare;
+    //static int directionCompare;
     static PcoSemaphore mutex(1);
     static int clac = 0; // pour diriger l'aguillage
+    static std::array<SharedSection::Direction, 2> directionComparison = {};
+
+    static int index = -1;
+
+    mutex.acquire();
+    ++index;
+    mutex.release();
+
+    //int index = 1;
 
     while(true) {
-        directionCompare = 3;
+
+        //directionCompare = 3;
         int currentPoint = 0;
 
-        mutex.acquire();    // grâce à cette magouille suprême, directionCompare != 0 équivaut à: les trains vont dans des directions différentes
-        directionCompare == 3 ? directionCompare = static_cast<int>(direction) : directionCompare -= static_cast<int>(direction);
-        mutex.release();
+        //mutex.acquire();    // grâce à cette magouille suprême, directionCompare != 0 équivaut à: les trains vont dans des directions différentes
+        //directionCompare == 3 ? directionCompare = static_cast<int>(direction) : directionCompare -= static_cast<int>(direction);
+        //mutex.release();
+
+        directionComparison[index] = direction;
 
         currentPoint = nextPoint(contactPoints, direction, currentPoint);
         attendre_contact(currentPoint);
@@ -88,7 +94,7 @@ void LocomotiveBehavior::run()
         diriger_aiguillage(7, (TOUT_DROIT + clac % 2), 0);
         diriger_aiguillage(8, (DEVIE + clac % 2), 0);
 
-        if (directionCompare) sharedSection->release(loco);
+        if (directionComparison[index] != directionComparison[(index + 1) % 2]) sharedSection->release(loco);
         else {
             currentPoint = nextPoint(contactPoints, direction, currentPoint);
             attendre_contact(currentPoint);
