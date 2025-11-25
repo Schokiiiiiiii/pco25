@@ -135,3 +135,7 @@ pas corrigé cette fonctionalité, ne sachant de toute façon pas comment le fai
 
 2. La locomotive rouge ne passe pas sur la bonne section partagée bien que les aiguillages sont arrangés de la bonne des
 façons sur la GUI. Nous pensons donc que c'est également un problème d'affichage.
+
+3. Pour des raisons qui nous sont inconnues, lorsque les locomotives ne vont pas dans le même sens, il arrive que la
+locomotive sortant release au second contact plutôt qu'au premier. Cela agit comme si les locomotives allaient dans le
+même sens alors que ce n'est pas le cas.
