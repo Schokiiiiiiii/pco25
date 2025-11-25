@@ -12,6 +12,7 @@
 #define SHAREDSECTION_H
 
 #include <QDebug>
+#include <unistd.h>
 
 #include <pcosynchro/pcosemaphore.h>
 
@@ -74,6 +75,9 @@ public:
             // if there was a stopAll, cancel
             if (stopped)
                 return;
+
+            // for passengers' heart, sleep at least 1s
+            sleep(1);
 
             // replace current loco in the shared section
             mutex.acquire();
