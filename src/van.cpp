@@ -51,6 +51,8 @@ void Van::loadAtDepot() {
 
     // TODO: implement this method. If possible, load at least 2 bikes
 
+    size_t a = std::min(2, );
+
     if (binkingInterface) {
         binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes());
     }
