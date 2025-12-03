@@ -27,13 +27,48 @@ void Person::setInterface(BikingInterface* _binkingInterface) {
 
 
 void Person::run() {
-    // TODO: implement this method
+
+    // modified - Fabien
+
+    while (true) {
+
+        // 1. wait for bike on site I
+        Bike* currentBike = takeBikeFromSite(homeSite);
+
+        // 2. go to site J /= I
+        const unsigned int siteJ = chooseOtherSite(homeSite);
+        bikeTo(siteJ, currentBike);
+
+        // 3. wait for born on site J to free up
+        depositBikeAtSite(siteJ, currentBike);
+        currentSite = siteJ;
+
+        // 4. walk to site K
+        unsigned int siteK = 0;
+
+        // we want K to be different from both I and J
+        while (siteK == currentSite)
+            siteK = chooseOtherSite(homeSite);
+
+        walkTo(siteK);
+        currentSite = siteK;
+
+        // 5. go back to I via bike
+        currentBike = takeBikeFromSite(currentSite);
+        bikeTo(homeSite, currentBike);
+        depositBikeAtSite(homeSite, currentBike);
+    }
 }
 
-Bike* Person::takeBikeFromSite(unsigned int _site) {
+Bike* Person::takeBikeFromSite(const unsigned int _site) {
     Bike * bike = nullptr; // just to silence compiler warnings
-    // TODO: implement this method
 
+    // modified - Fabien
+
+    // take bike from station
+    bike = stations[_site]->getBike(preferredType);
+
+    // update graphical interface
     if (binkingInterface) {
         binkingInterface->setBikes(_site, stations[_site]->nbBikes());
     }
@@ -41,9 +76,14 @@ Bike* Person::takeBikeFromSite(unsigned int _site) {
     return bike;
 }
 
-void Person::depositBikeAtSite(unsigned int _site, Bike* _bike) {
-    // TODO: implement this method
+void Person::depositBikeAtSite(const unsigned int _site, Bike* _bike) {
 
+    // modified - Fabien
+
+    // put bike to station
+    stations[_site]->putBike(_bike);
+
+    // update graphical interface
     if (binkingInterface) {
         binkingInterface->setBikes(_site, stations[_site]->nbBikes());
     }
