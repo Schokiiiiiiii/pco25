@@ -125,6 +125,8 @@ private:
     std::queue<PcoConditionVariable *> bikePut;                                        // people put in FIFO only
 
     std::array<std::vector<Bike*>, Bike::nbBikeTypes> bikesPerType; // bikes are separated per type
+
+    bool stopped = false; // turned to true when asked to stop
 };
 
 #endif // BIKESTATION_H
