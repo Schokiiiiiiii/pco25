@@ -58,6 +58,8 @@ void Van::loadAtDepot() {
 void Van::balanceSite(unsigned int _site)
 {
     // TODO: implement this method
+
+
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes()); // Keep somewhere for GUI
 }
 
