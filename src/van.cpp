@@ -8,10 +8,11 @@ Van::Van(unsigned int _id) : id(_id), currentSite(DEPOT_ID) {}
 
 void Van::run() {
     while (true /*TODO: clean stop*/) {
-        loadAtDepot();
+        size_t a = std::min(2, stations[DEPOT_ID]->nbBikes());
+        loadAtDepot(a);
         for (unsigned int s = 0; s < NBSITES; ++s) {
             driveTo(s);
-            balanceSite(s);
+            balanceSite(s); // je lui donne a aussi?
         }
         returnToDepot();
     }
@@ -39,13 +40,13 @@ void Van::driveTo(unsigned int _dest) {
     currentSite = _dest;
 }
 
-void Van::loadAtDepot() {
+void Van::loadAtDepot(size_t a) {
     driveTo(DEPOT_ID);
 
     // If possible, at least 2 bikes are loaded
 
     // is there  space left in the van? y -> are we able to fetch any bike from the depot? y -> bikes is pasted at the end of cargo
-    size_t a = std::min(2, stations[DEPOT_ID]->nbBikes());
+
     if (cargo.size() < VAN_CAPACITY) // python style baby
         if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(a); bikes.size())
             cargo.insert(cargo.end(), bikes.begin(), bikes.end());
@@ -59,6 +60,7 @@ void Van::balanceSite(unsigned int _site)
 {
     // TODO: implement this method
 
+    if (stations[_site]->nbBikes() > BORNES - 2)
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes()); // Keep somewhere for GUI
 }

@@ -75,7 +75,7 @@ private:
      * Clears the current cargo, drives to the depot if necessary,
      * and takes a limited number of bikes from the depot station.
      */
-    void loadAtDepot();
+    void loadAtDepot(size_t _a);
 
     /**
      * @brief Balances the number of bikes at a given site.
