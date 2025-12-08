@@ -18,11 +18,17 @@ void BikeStation::putBike(Bike* _bike){
     mutex.lock();
 
     // if bike station full, wait in line to put bike
-    while (nbBikes() >= capacity) {
+    while (nbBikes() >= capacity && !stopped) {
         auto *cond = new PcoConditionVariable();
         bikePut.emplace(cond);
         cond->wait(&mutex);
         delete cond;
+    }
+
+    // if bike station is stopped, return
+    if (stopped) {
+        mutex.unlock();
+        return;
     }
 
     // add bike to the correct bike type queue
@@ -46,11 +52,17 @@ Bike* BikeStation::getBike(const size_t _bikeType) {
     mutex.lock();
 
     // if bike station bike type is empty, wait
-    while (bikesPerType[_bikeType].empty()) {
+    while (bikesPerType[_bikeType].empty() && !stopped) {
         auto *cond = new PcoConditionVariable();
         bikeGetPerType[_bikeType].emplace(cond);
         cond->wait(&mutex);
         delete cond;
+    }
+
+    // if bike station is stopped, return
+    if (stopped) {
+        mutex.unlock();
+        return nullptr;
     }
 
     // take the bike type
@@ -108,5 +120,24 @@ size_t BikeStation::nbSlots() {
 }
 
 void BikeStation::ending() {
-   // TODO: implement this method
+
+    // modified - Fabien
+
+    // lock mutex since we don't want sizes to change when we free all
+    mutex.lock();
+
+    // turn stopped to true so threads can leave
+    stopped = true;
+
+    // wake up all getters
+    for (const auto& type : bikeGetPerType)
+        for (size_t i = 0 ; i < type.size() ; ++i)
+            type.front()->notifyOne();
+
+    // wake up all putters
+    for (size_t i = 0 ; i < bikePut.size() ; ++i)
+        bikePut.front()->notifyOne();
+
+    // unlock mutex after all operations are done
+    mutex.unlock();
 }

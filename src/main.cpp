@@ -25,7 +25,21 @@ std::vector<std::unique_ptr<PcoThread>>* globalThreads = nullptr;
 
 // Should stop all threads and release waiting ones
 void stopSimulation() {
-    // TODO: implement this function
+
+    // modified - Fabien
+
+    // if no stations or threads, quit
+    if (globalStations == nullptr || globalThreads == nullptr)
+        return;
+
+    // request all threads to stop
+    for (const auto &thread : *globalThreads) {
+        thread->requestStop();
+    }
+
+    // ask all stations to stop and release threads
+    for (BikeStation* station : *globalStations)
+        station->ending();
 }
 
 

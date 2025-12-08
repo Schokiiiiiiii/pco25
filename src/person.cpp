@@ -1,6 +1,7 @@
 #include "person.h"
 #include "bike.h"
 #include <random>
+#include <pcosynchro/pcothread.h>
 
 BikingInterface* Person::binkingInterface = nullptr;
 std::array<BikeStation*, NB_SITES_TOTAL> Person::stations{};
@@ -25,15 +26,19 @@ void Person::setInterface(BikingInterface* _binkingInterface) {
     binkingInterface = _binkingInterface;
 }
 
-
 void Person::run() {
 
     // modified - Fabien
 
-    while (true) {
+    // loop until we are requested to stop
+    while (!PcoThread::thisThread()->stopRequested()) {
 
         // 1. wait for bike on site I
         Bike* currentBike = takeBikeFromSite(homeSite);
+
+        // if a stop was requested, stop here
+        if (PcoThread::thisThread()->stopRequested())
+            break;
 
         // 2. go to site J /= I
         const unsigned int siteJ = chooseOtherSite(homeSite);
@@ -43,18 +48,29 @@ void Person::run() {
         depositBikeAtSite(siteJ, currentBike);
         currentSite = siteJ;
 
-        // 4. walk to site K
+        // if a stop was requested, stop here
+        if (PcoThread::thisThread()->stopRequested())
+            break;
+
+        // 4. chose a site k to walk to
         unsigned int siteK = 0;
 
         // we want K to be different from both I and J
         while (siteK == currentSite)
             siteK = chooseOtherSite(homeSite);
 
+        // walk to site k
         walkTo(siteK);
         currentSite = siteK;
 
         // 5. go back to I via bike
         currentBike = takeBikeFromSite(currentSite);
+
+        // if a stop was requested, stop here
+        if (PcoThread::thisThread()->stopRequested())
+            break;
+
+        // go back to I and deposit the bike
         bikeTo(homeSite, currentBike);
         depositBikeAtSite(homeSite, currentBike);
     }
