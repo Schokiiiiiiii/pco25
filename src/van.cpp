@@ -42,13 +42,14 @@ void Van::driveTo(unsigned int _dest) {
 void Van::loadAtDepot() {
     driveTo(DEPOT_ID);
 
-    // TODO: implement this method. If possible, load at least 2 bikes
+    // If possible, at least 2 bikes are loaded
 
-    // nbBikes est toujours à jour?
+    // is there  space left in the van? y -> are we able to fetch any bike from the depot? y -> bikes is pasted at the end of cargo
     size_t a = std::min(2, stations[DEPOT_ID]->nbBikes());
-    while (cargo.size() <= VAN_CAPACITY && a) {
+    if (cargo.size() < VAN_CAPACITY) // python style baby
+        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(a); bikes.size())
+            cargo.insert(cargo.end(), bikes.begin(), bikes.end());
 
-    }
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes());
 }
