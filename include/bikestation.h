@@ -4,6 +4,11 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <queue>
+#include <pcosynchro/pcomanager.h>
+#include <pcosynchro/pcomutex.h>
+#include <pcosynchro/pcoconditionvariable.h>
+
 #include "bike.h"
 
 /**
@@ -114,6 +119,12 @@ private:
      * @brief Maximum number of bikes that can be stored in this station.
      */
     const size_t capacity;
+
+    PcoMutex mutex; // mutex for mesa monitor
+    std::array<std::queue<PcoConditionVariable *>, Bike::nbBikeTypes> bikeGetPerType;  // people get bikes FIFO/per type
+    std::queue<PcoConditionVariable *> bikePut;                                        // people put in FIFO only
+
+    std::array<std::vector<Bike*>, Bike::nbBikeTypes> bikesPerType; // bikes are separated per type
 };
 
 #endif // BIKESTATION_H
