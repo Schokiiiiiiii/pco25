@@ -130,13 +130,18 @@ void BikeStation::ending() {
     stopped = true;
 
     // wake up all getters
-    for (const auto& type : bikeGetPerType)
-        for (size_t i = 0 ; i < type.size() ; ++i)
+    for (auto& type : bikeGetPerType) {
+        while (!type.empty()) {
             type.front()->notifyOne();
+            type.pop();
+        }
+    }
 
     // wake up all putters
-    for (size_t i = 0 ; i < bikePut.size() ; ++i)
+    while (!bikePut.empty()) {
         bikePut.front()->notifyOne();
+        bikePut.pop();
+    }
 
     // unlock mutex after all operations are done
     mutex.unlock();
