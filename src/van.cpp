@@ -56,25 +56,31 @@ void Van::loadAtDepot(size_t a) {
 }
 
 
-void Van::balanceSite(unsigned int _site, size_t& a)
+void Van::balanceSite(unsigned int _site)
 {
-    // TODO: implement this method
-
-    size_t nbBikes = stations[_site]->nbBikes();,
+    size_t nbBikes = stations[_site]->nbBikes();
 
     if (nbBikes > BORNES - 2) {
-        size_t c = std::min(nbBikes - BORNES + 2, VAN_CAPACITY - a); // nombre de vélos à retirer de _site
+        size_t c = std::min(nbBikes - BORNES + 2, VAN_CAPACITY - cargo.size()); // nombre de vélos à retirer de _site
         std::vector<Bike *> bikes = stations[_site]->getBikes(c);
         cargo.insert(cargo.end(), bikes.begin(), bikes.end());
-        a += c;
     }
     else if (nbBikes < BORNES - 2) {
-        size_t c = std::min(BORNES - nbBikes - 2, a); // nombre de vélos à ajouter à _site
+        size_t c = std::min(BORNES - nbBikes - 2, cargo.size()); // nombre de vélos à ajouter à _site
         uint bikesDropped = 0;
         for (size_t type = 0; type < Bike::nbBikeTypes; ++type) {
             if (!stations[_site]->countBikesOfType(type)) {
-                Bike* bike = takeBikeFromCargo(type);
+                if (Bike* bike = takeBikeFromCargo(type); bike != nullptr) {
+                    stations[_site]->putBike(bike);
+                    ++bikesDropped;
+                }
+                if (bikesDropped == c) break;
             }
+        }
+        while (bikesDropped < c && cargo.size()) {
+            stations[_site]->putBike(cargo.back());
+            cargo.pop_back();
+            ++bikesDropped;
         }
     }
 
