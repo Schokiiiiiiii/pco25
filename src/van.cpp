@@ -7,14 +7,16 @@ std::array<BikeStation*, NB_SITES_TOTAL> Van::stations{};
 Van::Van(unsigned int _id) : id(_id), currentSite(DEPOT_ID) {}
 
 void Van::run() {
-    while (true /*TODO: clean stop*/) {
-        size_t a = std::min(2, stations[DEPOT_ID]->nbBikes());
-        loadAtDepot(a);
+    // TODO fix this, as ending() returns void and not bool
+
+    while (!stations[currentSite]->ending()) {
+        loadAtDepot();
         for (unsigned int s = 0; s < NBSITES; ++s) {
             driveTo(s);
-            balanceSite(s, a); // je lui donne a aussi
+            balanceSite(s);
         }
         returnToDepot();
+        usleep(300000); // 300000 micro-secondes est égal à 0.3 secondes, ce qui est bien assez pour le repos des employés
     }
     log("Van s'arrête proprement");
 }
@@ -40,17 +42,14 @@ void Van::driveTo(unsigned int _dest) {
     currentSite = _dest;
 }
 
-void Van::loadAtDepot(size_t a) {
+void Van::loadAtDepot() {
     driveTo(DEPOT_ID);
 
-    // If possible, at least 2 bikes are loaded
-
-    // is there  space left in the van? y -> are we able to fetch any bike from the depot? y -> bikes is pasted at the end of cargo
-
-    if (cargo.size() < VAN_CAPACITY) // python style baby
-        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(a); bikes.size())
+    // is there space left in the van? y -> are we able to fetch any bike from the depot? y -> bikes is pasted at the end of cargo
+    if (cargo.size() < VAN_CAPACITY) // in theory the cargo is empty at the beginning of the day
+        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(std::min(2, stations[DEPOT_ID]->nbBikes())); bikes.size())
+            // If possible, at least 2 bikes are loaded
             cargo.insert(cargo.end(), bikes.begin(), bikes.end());
-
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes());
 }
@@ -61,28 +60,30 @@ void Van::balanceSite(unsigned int _site)
     size_t nbBikes = stations[_site]->nbBikes();
 
     if (nbBikes > BORNES - 2) {
-        size_t c = std::min(nbBikes - BORNES + 2, VAN_CAPACITY - cargo.size()); // nombre de vélos à retirer de _site
-        std::vector<Bike *> bikes = stations[_site]->getBikes(c);
+        // nombre de vélos à retirer de _site
+        std::vector<Bike *> bikes = stations[_site]->getBikes(std::min(nbBikes - BORNES + 2, VAN_CAPACITY - cargo.size()));
+        // il est possible qu'on ne puisse pas en ajouter au van
         cargo.insert(cargo.end(), bikes.begin(), bikes.end());
     }
     else if (nbBikes < BORNES - 2) {
         size_t c = std::min(BORNES - nbBikes - 2, cargo.size()); // nombre de vélos à ajouter à _site
         uint bikesDropped = 0;
-        for (size_t type = 0; type < Bike::nbBikeTypes; ++type) {
-            if (!stations[_site]->countBikesOfType(type)) {
-                if (Bike* bike = takeBikeFromCargo(type); bike != nullptr) {
-                    stations[_site]->putBike(bike);
+        for (size_t type = 0; type < Bike::nbBikeTypes; ++type) { // pour chaque type de vélo
+            if (!stations[_site]->countBikesOfType(type)) { // si y en a pas dans le site
+                if (Bike* bike = takeBikeFromCargo(type); bike != nullptr) { // et qu'on a pu en prendre un dans le van
+                    stations[_site]->putBike(bike); // alors on le mets dans le site
                     ++bikesDropped;
                 }
                 if (bikesDropped == c) break;
             }
         }
-        while (bikesDropped < c && cargo.size()) {
-            stations[_site]->putBike(cargo.back());
+        while (bikesDropped < c && cargo.size()) { // si on en a pas mis assez et qu'il nous en reste
+            stations[_site]->putBike(cargo.back()); // on en met sans les choisir
             cargo.pop_back();
             ++bikesDropped;
         }
     }
+    // si nbBikes == BORNES - 2 on a rien besoin de faire
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes()); // Keep somewhere for GUI
 }
@@ -90,10 +91,9 @@ void Van::balanceSite(unsigned int _site)
 void Van::returnToDepot() {
     driveTo(DEPOT_ID);
 
-    // car no go space, car go road.
-    size_t cargoCount = cargo.size();
-
-    // TODO: implement this method. If the van carries bikes, then leave them
+    // If the van carries bikes, then leave them
+    if (cargo = stations[DEPOT_ID]->addBikes(cargo); cargo.size())
+        log("Couldn't return all bikes to the depot");
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes());
 }

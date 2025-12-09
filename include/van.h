@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <array>
+#include <thread>
+#include <chrono>
 #include "config.h"
 #include "bikestation.h"
 #include "bikinginterface.h"
@@ -75,7 +77,7 @@ private:
      * Clears the current cargo, drives to the depot if necessary,
      * and takes a limited number of bikes from the depot station.
      */
-    void loadAtDepot(size_t _a);
+    void loadAtDepot();
 
     /**
      * @brief Balances the number of bikes at a given site.
@@ -85,7 +87,7 @@ private:
      *
      * @param _s Index of the site to balance.
      */
-    void balanceSite(unsigned int _s, size_t _a);
+    void balanceSite(unsigned int _s);
 
     /**
      * @brief Returns to the depot and drops all remaining bikes.
