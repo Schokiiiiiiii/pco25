@@ -16,7 +16,7 @@ void Van::run() {
             balanceSite(s);
         }
         returnToDepot();
-        usleep(300000); // 300000 micro-secondes est égal à 0.3 secondes, ce qui est bien assez pour le repos des employés
+        std::this_thread::sleep_for(std::chrono::milliseconds(300)); // c'est important d'être bien reposé pour repartir du bon pied
     }
     log("Van s'arrête proprement");
 }
