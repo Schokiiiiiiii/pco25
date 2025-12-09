@@ -44,6 +44,18 @@ Les deux fonctions à compléter `takeBikeFromSite()` et `depositBikeAtSite` app
 
 ### Van
 
+Pour la fonctionnalité du van, nous avons majoritairement suivi le pseudo-code proposé dans le pdf. Nous avons pris quelques libertés quand nous
+avions l'impression qu'elles étaient pertinentes, comme le minimum de vélos à charger au moment de partir du dépot, qui dépend
+maintenant aussi de la place restante dans le van. Une autre liberté que nous avons prise est de faire rentrer le van au dépot quand la
+simulation s'arrête, pour que les employés aient la possibilité de se reposer confortablement. Le temps réglementaire de pause n'étant pas
+défini, nous avons choisi 0.5 seconde.
+
+La plus grande difficulté était probablement d'interpréter correctement ce pseudo-code en fonction du squelette mis à notre disposition, comme
+la variable a que nous avons commencé par créer tel quel, avant de se rendre compte qu'elle représentait en réalité cargo.size(), ou
+encore Vi qui n'était pas une variable présente dans van.cpp mais qui était changé par les fonctions appelées.
+
+Pour ce qui est de la sécurité, le van n'a pas fondamentalement besoin d'être protégé car il est déjà blindé (peinture verte).
+
 ### BikeStation
 
 Au niveau de l'implémentation, nous avons décidé de partir sur des queues de condition. Grâce à cela, on évite un
