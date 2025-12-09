@@ -19,6 +19,9 @@ void Van::run() {
         for (unsigned int s = 0; s < NBSITES; ++s) {
             driveTo(s);
             balanceSite(s);
+            if (PcoThread::thisThread()->stopRequested()) {
+                break;
+            }
         }
         returnToDepot();
         // 0.3 seconds of sleep a day keeps the doctor away

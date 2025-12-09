@@ -127,6 +127,13 @@ private:
     std::array<std::queue<Bike*>, Bike::nbBikeTypes> bikesPerType; // bikes are separated per type
 
     bool stopped = false; // turned to true when asked to stop
+
+    /**
+     * @brief Returns the total number of bikes currently stored. Doesn't have any mutex so only used in private.
+     *
+     * @return Current number of bikes in the station.
+     */
+    size_t nbBikesUnprotected();
 };
 
 #endif // BIKESTATION_H

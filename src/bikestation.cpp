@@ -14,7 +14,7 @@ void BikeStation::putBike(Bike* _bike){
     mutex.lock();
 
     // if bike station full, wait in line to put bike
-    while (nbBikes() >= capacity && !stopped) {
+    while (nbBikesUnprotected() >= capacity && !stopped) {
         auto *cond = new PcoConditionVariable();
         bikePut.emplace(cond);
         cond->wait(&mutex);
@@ -86,7 +86,7 @@ std::vector<Bike*> BikeStation::addBikes(std::vector<Bike*> _bikesToAdd) {
     mutex.lock();
 
     for (Bike* bike : _bikesToAdd) {
-        if (nbBikes() < capacity) { // if there's any space left
+        if (nbBikesUnprotected() < capacity) { // if there's any space left
             bikesPerType[bike->bikeType].push(bike);
 
             // tell people who are waiting to retrieve this type of bike
@@ -137,7 +137,7 @@ size_t BikeStation::countBikesOfType(size_t type) const {
     return bikesPerType[type].size();
 }
 
-size_t BikeStation::nbBikes() {
+size_t BikeStation::nbBikesUnprotected() {
 
     // modified - Fabien
 
@@ -146,6 +146,20 @@ size_t BikeStation::nbBikes() {
     for (const auto& types : bikesPerType) {
         nb += types.size();
     }
+
+    return nb;
+}
+
+size_t BikeStation::nbBikes() {
+
+    // modified - Fabien
+
+    mutex.lock();
+
+    // get the number of each type of bike and add up
+    size_t nb = nbBikesUnprotected();
+
+    mutex.unlock();
 
     return nb;
 }
