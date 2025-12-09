@@ -12,7 +12,7 @@ void Van::run() {
         loadAtDepot(a);
         for (unsigned int s = 0; s < NBSITES; ++s) {
             driveTo(s);
-            balanceSite(s); // je lui donne a aussi?
+            balanceSite(s, a); // je lui donne a aussi
         }
         returnToDepot();
     }
@@ -56,11 +56,29 @@ void Van::loadAtDepot(size_t a) {
 }
 
 
-void Van::balanceSite(unsigned int _site)
+void Van::balanceSite(unsigned int _site, size_t& a)
 {
     // TODO: implement this method
 
-    if (stations[_site]->nbBikes() > BORNES - 2)
+    size_t nbBikes = stations[_site]->nbBikes();,
+
+    if (nbBikes > BORNES - 2) {
+        size_t c = std::min(nbBikes - BORNES + 2, VAN_CAPACITY - a); // nombre de vélos à retirer de _site
+        std::vector<Bike *> bikes = stations[_site]->getBikes(c);
+        cargo.insert(cargo.end(), bikes.begin(), bikes.end());
+        a += c;
+    }
+    else if (nbBikes < BORNES - 2) {
+        size_t c = std::min(BORNES - nbBikes - 2, a); // nombre de vélos à ajouter à _site
+        uint bikesDropped = 0;
+        for (size_t type = 0; type < Bike::nbBikeTypes; ++type) {
+            if (!stations[_site]->countBikesOfType(type)) {
+                for (size_t i = 0; i < cargo.size(); ++i) {
+
+                }
+            }
+        }
+    }
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes()); // Keep somewhere for GUI
 }

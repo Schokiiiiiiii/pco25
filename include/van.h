@@ -85,7 +85,7 @@ private:
      *
      * @param _s Index of the site to balance.
      */
-    void balanceSite(unsigned int _s);
+    void balanceSite(unsigned int _s, size_t _a);
 
     /**
      * @brief Returns to the depot and drops all remaining bikes.
