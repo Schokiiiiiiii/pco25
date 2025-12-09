@@ -24,8 +24,8 @@ void Van::run() {
             }
         }
         returnToDepot();
-        // 0.3 seconds of sleep a day keeps the doctor away
-        PcoThread::thisThread()->usleep(300000);
+        // 0.5 seconds of sleep a day keeps the doctor away
+        PcoThread::thisThread()->usleep(500000);
     }
     log("Van s'arrête proprement");
 }
@@ -59,10 +59,14 @@ void Van::loadAtDepot() {
     driveTo(DEPOT_ID);
 
     // is there any space left in the van? y -> did we manage to fetch any bike from the storage? y -> we add bikes to cargo
-    if (cargo.size() < VAN_CAPACITY) // en théorie le van est vide à la fin de la journée
-        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(std::min((size_t)2, stations[DEPOT_ID]->nbBikes())); bikes.size())
+
+    if (cargo.size() < VAN_CAPACITY) { // in theory the van is empty at the end of the day
+        // in case the van has space for only one bike. Don't know why this should happen but if it happens, now it's fine
+        size_t nbToLoad = std::min(std::min((size_t)2, stations[DEPOT_ID]->nbBikes()), VAN_CAPACITY - cargo.size());
+        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(nbToLoad); bikes.size())
             // if possible, at least 2 bikes are loaded in the van
             cargo.insert(cargo.end(), bikes.begin(), bikes.end());
+    }
 
     if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes());
 }
@@ -109,7 +113,7 @@ void Van::returnToDepot() {
 
     driveTo(DEPOT_ID);
 
-    // If the van is transporting bicycles, we try to leave them at the depot
+    // if the van is transporting bicycles, we try to leave them at the depot
     if (cargo = stations[DEPOT_ID]->addBikes(cargo); cargo.size())
         log("Van n'a pas pu laisser tous les vélos au dépôt");
 
