@@ -20,6 +20,28 @@ déposer un vélo dépendant de l'état de la station.
 
 ### Person
 
+Il a suffi de principalement suivre la donnée.
+
+Plusieurs `if(stopRequested())` ont été ajoutés pour s'arrêter dans le cas où un `stopSimulation()` est arrivé. On peut
+ainsi à la fin de n'importe quel trajet sortir de notre boucle while.
+
+```C++
+// if a stop was requested, stop here
+if (PcoThread::thisThread()->stopRequested())
+    break;
+```
+
+Pour le site K, il paraissait logique de choisir un site différent de I ET de J. Nous avons donc une boucle un peu
+bizarre de la forme :
+
+```c++
+// we want K to be different from both I and J
+while (siteK == currentSite)
+    siteK = chooseOtherSite(homeSite);
+```
+
+Les deux fonctions à compléter `takeBikeFromSite()` et `depositBikeAtSite` appellent simplement BikeStation.
+
 ### Van
 
 ### BikeStation
@@ -46,6 +68,12 @@ On a surtout suivi le code qui nous était donnée pour un moniteur de Mesa sino
 n'avons pas eu besoin de variables pour compter, car toutes les conditions sont déjà dans nos queues et il est facile de
 savoir combien il y en a avec la fonction `size()`.
 
+### Stop simulation
+
+Comme dans le labo précédent, on demande aux threads de s'arrêter puis on appelle `bikeStation->ending()` pour toutes
+les stations pour empêcher les threads de rentrer à nouveau dans la classe, mais aussi de libérer ceux actuellement
+bloqués en attente d'un vélo ou d'une place.
+
 ## Tests
 
 Tester person.h et van.h s'avère difficile, car ces classes sont privées. Il semble possible de mettre les tests en tant
@@ -58,5 +86,5 @@ nombreux tests.
 
 ## Conclusion
 
-Il n'y a pas vraiment eu de problèmes lors de ce labo. Le plus difficile a été de réfléchir aux bonnes structure pour
+Il n'y a pas vraiment eu de problèmes lors de ce labo. Le plus difficile a été de réfléchir aux bonnes structures pour
 faire fonctionner le moniteur de Mesa.
