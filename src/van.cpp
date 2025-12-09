@@ -73,9 +73,7 @@ void Van::balanceSite(unsigned int _site, size_t& a)
         uint bikesDropped = 0;
         for (size_t type = 0; type < Bike::nbBikeTypes; ++type) {
             if (!stations[_site]->countBikesOfType(type)) {
-                for (size_t i = 0; i < cargo.size(); ++i) {
-
-                }
+                Bike* bike = takeBikeFromCargo(type);
             }
         }
     }
