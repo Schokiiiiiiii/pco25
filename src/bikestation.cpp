@@ -1,10 +1,6 @@
 #include "bikestation.h"
 
-BikeStation::BikeStation(const int _capacity) : capacity(_capacity) {
-    for (auto &type : bikesPerType) {
-        type.reserve(capacity);
-    }
-}
+BikeStation::BikeStation(const int _capacity) : capacity(_capacity) { }
 
 BikeStation::~BikeStation() {
     ending();
@@ -32,7 +28,7 @@ void BikeStation::putBike(Bike* _bike){
     }
 
     // add bike to the correct bike type queue
-    bikesPerType[_bike->bikeType].push_back(_bike);
+    bikesPerType[_bike->bikeType].push(_bike);
 
     // if getter waiting, free him depending on bike type
     if (!bikeGetPerType[_bike->bikeType].empty()) {
@@ -66,8 +62,8 @@ Bike* BikeStation::getBike(const size_t _bikeType) {
     }
 
     // take the bike type
-    Bike* bike = bikesPerType[_bikeType].back();
-    bikesPerType[_bikeType].pop_back();
+    Bike* bike = bikesPerType[_bikeType].front();
+    bikesPerType[_bikeType].pop();
 
     // if there are putters waiting, free the first one
     if (!bikePut.empty()) {
@@ -83,14 +79,53 @@ Bike* BikeStation::getBike(const size_t _bikeType) {
 }
 
 std::vector<Bike*> BikeStation::addBikes(std::vector<Bike*> _bikesToAdd) {
-    std::vector<Bike*> result; // Can be removed, it's just to avoid a compiler warning
-    // TODO: implement this method
+
+    // modified - Aymeric
+
+    std::vector<Bike*> result; // remaining bikes that will be returned
+    mutex.lock();
+
+    for (Bike* bike : _bikesToAdd) {
+        if (nbBikes() < capacity) { // if there's any space left
+            bikesPerType[bike->bikeType].push(bike);
+
+            // tell people who are waiting to retrieve this type of bike
+            // in theory this should not happen since this function is only called from the van
+            if (!bikeGetPerType[bike->bikeType].empty()) {
+                bikeGetPerType[bike->bikeType].front()->notifyOne();
+                bikeGetPerType[bike->bikeType].pop();
+            }
+        } else result.push_back(bike);
+    }
+
+    mutex.unlock();
     return result;
 }
 
 std::vector<Bike*> BikeStation::getBikes(size_t _nbBikes) {
-    std::vector<Bike*> result; // Can be removed, it's just to avoid a compiler warning
-    // TODO: implement this method
+
+    // modified - Aymeric
+
+    std::vector<Bike*> result; // bikes retrieved from the station
+    mutex.lock();
+
+    // retrieve bikes until there is no more to retrieve, or we have retrieved enough
+    for (size_t type = 0; type < Bike::nbBikeTypes; ++type) {
+        while (!bikesPerType[type].empty() && _nbBikes) {
+            result.push_back(bikesPerType[type].front());
+            bikesPerType[type].pop();
+            --_nbBikes;
+
+            // tell people who are waiting to deposit this type of bike
+            // in theory this should not happen since this function is only called from the van
+            if (!bikePut.empty()) {
+                bikePut.front()->notifyOne();
+                bikePut.pop();
+            }
+        }
+    }
+
+    mutex.unlock();
     return result;
 }
 

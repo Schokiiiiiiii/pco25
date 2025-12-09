@@ -1,4 +1,7 @@
 #include "van.h"
+#include <pcosynchro/pcothread.h>
+#include <thread>
+#include <chrono>
 
 BikingInterface* Van::binkingInterface = nullptr;
 std::array<BikeStation*, NB_SITES_TOTAL> Van::stations{};
@@ -7,10 +10,11 @@ std::array<BikeStation*, NB_SITES_TOTAL> Van::stations{};
 Van::Van(unsigned int _id) : id(_id), currentSite(DEPOT_ID) {}
 
 void Van::run() {
-    // TODO attention, ending renvoie void, pas bool
+
+    // modified - Aymeric
 
     // on teste à chaque site si la simulation n'est pas en train de s'arrêter
-    while (!stations[currentSite]->ending()) {
+    while (!PcoThread::thisThread()->stopRequested()) {
         loadAtDepot();
         for (unsigned int s = 0; s < NBSITES; ++s) {
             driveTo(s);
@@ -18,7 +22,7 @@ void Van::run() {
         }
         returnToDepot();
         // c'est important d'être bien reposé pour repartir du bon pied
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        PcoThread::thisThread()->usleep(300000);
     }
     log("Van s'arrête proprement");
 }
@@ -46,6 +50,9 @@ void Van::driveTo(unsigned int _dest) {
 }
 
 void Van::loadAtDepot() {
+
+    // modified - Aymeric
+
     driveTo(DEPOT_ID);
 
     // a-t-on de la place dans le van? y -> avons-nous réussi à prendre des vélos du dépot? y -> on colle bikes à la fin de cargo
@@ -58,8 +65,10 @@ void Van::loadAtDepot() {
 }
 
 
-void Van::balanceSite(unsigned int _site)
-{
+void Van::balanceSite(unsigned int _site) {
+
+    // modified - Aymeric
+
     size_t nbBikes = stations[_site]->nbBikes();
 
     if (nbBikes > BORNES - 2) {
@@ -92,6 +101,9 @@ void Van::balanceSite(unsigned int _site)
 }
 
 void Van::returnToDepot() {
+
+    // modified - Aymeric
+
     driveTo(DEPOT_ID);
 
     // si le van transporte des vélos, on tente de les laisser au dépot
