@@ -9,6 +9,7 @@ Van::Van(unsigned int _id) : id(_id), currentSite(DEPOT_ID) {}
 void Van::run() {
     // TODO attention, ending renvoie void, pas bool
 
+    // on teste à chaque site si la simulation n'est pas en train de s'arrêter
     while (!stations[currentSite]->ending()) {
         loadAtDepot();
         for (unsigned int s = 0; s < NBSITES; ++s) {
