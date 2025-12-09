@@ -129,12 +129,19 @@ std::vector<Bike*> BikeStation::getBikes(size_t _nbBikes) {
     return result;
 }
 
-size_t BikeStation::countBikesOfType(size_t type) const {
+size_t BikeStation::countBikesOfType(size_t type) {
 
     // modified - Fabien
 
+    mutex.lock();
+
+    // we have a data race on the .size()
+    const size_t nb = bikesPerType[type].size();
+
+    mutex.unlock();
+
     // return the type size
-    return bikesPerType[type].size();
+    return nb;
 }
 
 size_t BikeStation::nbBikesUnprotected() {

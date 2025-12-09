@@ -90,7 +90,7 @@ public:
      * @param type Bike type index (0..Bike::nbBikeTypes-1).
      * @return Number of bikes of the given type in the station.
      */
-    size_t countBikesOfType(size_t type) const;
+    size_t countBikesOfType(size_t type);
 
     /**
      * @brief Returns the total number of bikes currently stored.
