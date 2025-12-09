@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <array>
+#include <thread>
+#include <chrono>
 #include "config.h"
 #include "bikestation.h"
 #include "bikinginterface.h"
