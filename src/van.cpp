@@ -100,7 +100,7 @@ void Van::balanceSite(unsigned int _site) {
     }
     // if nbBikes == BORNES - 2 we don't need to do anything
 
-    if (binkingInterface) binkingInterface->setBikes(DEPOT_ID, stations[DEPOT_ID]->nbBikes()); // Keep somewhere for GUI
+    if (binkingInterface) binkingInterface->setBikes(_site, stations[_site]->nbBikes()); // Keep somewhere for GUI
 }
 
 void Van::returnToDepot() {

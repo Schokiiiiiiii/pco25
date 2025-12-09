@@ -53,7 +53,7 @@ void Person::run() {
             break;
 
         // 4. chose a site k to walk to
-        unsigned int siteK = 0;
+        unsigned int siteK = currentSite;
 
         // we want K to be different from both I and J
         while (siteK == currentSite)
