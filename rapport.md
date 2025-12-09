@@ -96,7 +96,11 @@ Tester BikeStations aurait été le bienvenu, mais nous n'avons malheureusement 
 sur le Teams que ceux-ci n'étaient pas nécessaires. Nous avons donc préféré rendre le code propre plutôt que faire de
 nombreux tests.
 
+Toutefois, tout semble fonctionner correctement suivant les indications de la donnée.
+
 ## Conclusion
 
 Il n'y a pas vraiment eu de problèmes lors de ce labo. Le plus difficile a été de réfléchir aux bonnes structures pour
 faire fonctionner le moniteur de Mesa.
+
+Pour des raisons qui nous sont inconnues, la GUI se relance de manière impromptue.
