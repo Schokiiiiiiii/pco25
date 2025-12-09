@@ -47,7 +47,7 @@ void Van::loadAtDepot() {
 
     // is there space left in the van? y -> are we able to fetch any bike from the depot? y -> bikes is pasted at the end of cargo
     if (cargo.size() < VAN_CAPACITY) // in theory the cargo is empty at the beginning of the day
-        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(std::min(2, stations[DEPOT_ID]->nbBikes())); bikes.size())
+        if (std::vector<Bike *> bikes = stations[DEPOT_ID]->getBikes(std::min((size_t)2, stations[DEPOT_ID]->nbBikes())); bikes.size())
             // If possible, at least 2 bikes are loaded
             cargo.insert(cargo.end(), bikes.begin(), bikes.end());
 
