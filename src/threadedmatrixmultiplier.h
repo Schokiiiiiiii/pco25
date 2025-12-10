@@ -32,26 +32,130 @@ public:
 /// Here we only wrote two potential methods, but there could be more at the end...
 ///
 template<class T>
-class Buffer
-{
+class Buffer : public PcoHoareMonitor {
+private:
+
+    // BUFFER
+    std::queue<ComputeParameters<T>> buffer;
+    size_t bufferSize;
+
+    // CONDITIONS
+    Condition waitSendJob;
+    Condition waitGetJob;
+
+    // STOPPING
+    size_t nbSendWaiting = 0;
+    size_t nbGetWaiting = 0;
+    bool stopRequested = false;
+
 public:
+
+    // INFOS
     int nbJobFinished{0}; // Keep this updated
-    /* Maybe some parameters */
+
+    explicit Buffer(const size_t bufferSize) : bufferSize(bufferSize) { }
+
+    ~Buffer() {
+        requestStop();
+    }
 
     ///
     /// \brief Sends a job to the buffer
-    /// \param Reference to a ComputeParameters object which holds the necessary parameters to execute a job
+    /// \param params Reference to a ComputeParameters object which holds the necessary parameters to execute a job
     ///
-    void sendJob(ComputeParameters<T> params) {}
+    void sendJob(ComputeParameters<T> params) {
+
+        // enter monitor
+        monitorIn();
+
+        // check if buffer is full, wait if so
+        if (buffer.size() == bufferSize) {
+            ++nbSendWaiting;
+            wait(waitSendJob);
+        }
+
+        // if buffer got stopped, return
+        if (stopRequested) {
+            return;
+        }
+
+        // add a job
+        buffer.push(params);
+
+        // wake up a getter
+        if (nbGetWaiting) {
+            --nbGetWaiting;
+            signal(waitGetJob); // not necessary to put inside but we're already chekcing
+        }
+
+        // exit monitor
+        monitorOut();
+    }
 
     ///
     /// \brief Requests a job to the buffer
-    /// \param Reference to a ComputeParameters object which holds the necessary parameters to execute a job
+    /// \param parameters Reference to a ComputeParameters object which holds the necessary parameters to execute a job
     /// \return true if a job is available, false otherwise
     ///
-    bool getJob(ComputeParameters<T>& parameters) { return false; }
+    bool getJob(ComputeParameters<T>& parameters) {
 
-    /* Maybe more methods */
+        // enter monitor
+        monitorIn();
+
+        // check if buffer is empty, if so wait
+        if (buffer.empty()) {
+            ++nbGetWaiting;
+            wait(waitGetJob);
+        }
+
+        // if buffer got stopped, return false to say no job got acquired
+        if (stopRequested) {
+            return false;
+        }
+
+        // take a job
+        parameters = buffer.front();
+        buffer.pop();
+
+        // wake up a sender
+        if (nbSendWaiting) {
+            --nbGetWaiting;
+            signal(waitSendJob);
+        }
+
+        // exit monitor
+        monitorOut();
+
+        // return true to say a job got acquired
+        return true;
+    }
+
+    ///
+    /// @brief Asks the monitor to stop all activities and release threads
+    ///
+    void requestStop() {
+
+        // enter monitor
+        monitorIn();
+
+        // change state of the buffer
+        stopRequested = true;
+
+        // wake up send
+        for (size_t i = 0 ; i < nbSendWaiting ; ++i)
+            signal(waitSendJob);
+
+        // wake up get
+        for (size_t i = 0 ; i < nbGetWaiting ; ++i)
+            signal(waitGetJob);
+
+        // put variables back to 0
+        nbSendWaiting = 0;
+        nbGetWaiting = 0;
+
+        // exit monitor
+        monitorOut();
+    }
 };
 
 
