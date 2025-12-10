@@ -96,6 +96,11 @@ public:
     /// For compatibility reason with SimpleMatrixMultiplier
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C) override
     {
+        // sizes must match, otherwise multiplying them is impossible
+        if (A.getSizeX() * 3 != A.getSizeX() + B.getSizeX() + C.getSizeX()) {
+            std::cerr << "Can't multiply given matrices, size mismatch\n";
+            return;
+        }
         multiply(A, B, C, nbBlocksPerRow);
     }
 
@@ -112,7 +117,14 @@ public:
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int nbBlocksPerRow)
     {
         // OK, computation is done correctly, but... Is it really multithreaded?!?
-        // TODO : Get rid of the next lines and do something meaningful
+        // TODO : Get rid of the next lines and do something meaningful :(
+
+        // nbBlocksPerRow must divide the size of the matrix
+        if (A.getSizeX() % nbBlocksPerRow) {
+            std::cerr << "Can't divide given matrices in " << nbBlocksPerRow << " blocks\n";
+            return;
+        }
+
         for (int i = 0; i < A.size(); i++) {
             for (int j = 0; j < A.size(); j++) {
                 T result = 0.0;
