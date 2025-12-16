@@ -7,6 +7,8 @@
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
 
+#include <vector>
+
 #include "abstractmatrixmultiplier.h"
 #include "matrix.h"
 
@@ -23,6 +25,7 @@ public:
     SquareMatrix<T>* C;
 
     /* Maybe some parameters */
+    // maybe add an index of position inside the big matrix
 };
 
 
@@ -32,28 +35,131 @@ public:
 /// Here we only wrote two potential methods, but there could be more at the end...
 ///
 template<class T>
-class Buffer
-{
+class Buffer : public PcoHoareMonitor {
+private:
+
+    // BUFFER
+    std::queue<ComputeParameters<T>> buffer;
+    size_t bufferSize;
+
+    // CONDITIONS
+    Condition waitSendJob;
+    Condition waitGetJob;
+
+    // STOPPING
+    size_t nbSendWaiting = 0;
+    size_t nbGetWaiting = 0;
+    bool stopRequested = false;
+
 public:
+
+    // INFOS
     int nbJobFinished{0}; // Keep this updated
-    /* Maybe some parameters */
+
+    explicit Buffer(const size_t bufferSize) : bufferSize(bufferSize) { }
+
+    ~Buffer() {
+        requestStop();
+    }
 
     ///
     /// \brief Sends a job to the buffer
-    /// \param Reference to a ComputeParameters object which holds the necessary parameters to execute a job
+    /// \param parameters Reference to a ComputeParameters object which holds the necessary parameters to execute a job
     ///
-    void sendJob(ComputeParameters<T> params) {}
+    void sendJob(ComputeParameters<T> parameters) {
+
+        // enter monitor
+        monitorIn();
+
+        // check if buffer is full, wait if so
+        if (buffer.size() == bufferSize) {
+            ++nbSendWaiting;
+            wait(waitSendJob);
+        }
+
+        // if buffer got stopped, return
+        if (stopRequested) {
+            return;
+        }
+
+        // add a job
+        buffer.push(parameters);
+
+        // wake up a getter
+        if (nbGetWaiting) {
+            --nbGetWaiting;
+            signal(waitGetJob); // not necessary to put inside but we're already chekcing
+        }
+
+        // exit monitor
+        monitorOut();
+    }
 
     ///
     /// \brief Requests a job to the buffer
-    /// \param Reference to a ComputeParameters object which holds the necessary parameters to execute a job
+    /// \param parameters Reference to a ComputeParameters object which holds the necessary parameters to execute a job
     /// \return true if a job is available, false otherwise
     ///
-    bool getJob(ComputeParameters<T>& parameters) { return false; }
+    bool getJob(ComputeParameters<T>& parameters) {
 
-    /* Maybe more methods */
+        // enter monitor
+        monitorIn();
+
+        // check if buffer is empty, if so wait
+        if (buffer.empty()) {
+            ++nbGetWaiting;
+            wait(waitGetJob);
+        }
+
+        // if buffer got stopped, return false to say no job got acquired
+        if (stopRequested) {
+            return false;
+        }
+
+        // take a job
+        parameters = buffer.front();
+        buffer.pop();
+
+        // wake up a sender
+        if (nbSendWaiting) {
+            --nbGetWaiting;
+            signal(waitSendJob);
+        }
+
+        // exit monitor
+        monitorOut();
+
+        // return true to say a job got acquired
+        return true;
+    }
+
+    ///
+    /// @brief Asks the monitor to stop all activities and release threads
+    ///
+    void requestStop() {
+
+        // enter monitor
+        monitorIn();
+
+        // change state of the buffer
+        stopRequested = true;
+
+        // wake up send
+        for (size_t i = 0 ; i < nbSendWaiting ; ++i)
+            signal(waitSendJob);
+
+        // wake up get
+        for (size_t i = 0 ; i < nbGetWaiting ; ++i)
+            signal(waitGetJob);
+
+        // put variables back to 0
+        nbSendWaiting = 0;
+        nbGetWaiting = 0;
+
+        // exit monitor
+        monitorOut();
+    }
 };
-
 
 ///
 /// A multi-threaded multiplicator. multiply() should at least be reentrant.
@@ -62,6 +168,7 @@ public:
 template<class T>
 class ThreadedMatrixMultiplier : public AbstractMatrixMultiplier<T>
 {
+    std::vector<PcoThread*> threads;
 
 public:
     ///
@@ -74,7 +181,9 @@ public:
     ThreadedMatrixMultiplier(int nbThreads, int nbBlocksPerRow = 0)
         : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow)
     {
-        // TODO
+        for (int i = 0; i < nbThreads; ++i) {
+            threads.push_back(new PcoThread(multiplySimple));
+        }
     }
 
     ///
@@ -85,6 +194,27 @@ public:
     ~ThreadedMatrixMultiplier()
     {
         // TODO
+    }
+
+    ///
+    /// \brief multiplySimple gets called by the threads to churn on the bits of matrices that are small enough
+    /// to get multiplied easily
+    ///
+    void multiplySimple() {
+        ComputeParameters<T>() params;
+        while(Buffer::getJob(params)) {
+            for (int i = 0; i < A.size(); i++) {
+                for (int j = 0; j < A.size(); j++) {
+                    T result = 0.0;
+                    for (int k = 0; k < A.size(); k++) {
+                        result += A.element(k, j) * B.element(i, k);
+                    }
+                    C.setElement(i, j, result);
+                }
+            }
+            // if the thread made it here, normally, its job is done
+            return;
+        }
     }
 
     ///
@@ -116,8 +246,8 @@ public:
     ///
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int nbBlocksPerRow)
     {
-        // OK, computation is done correctly, but... Is it really multithreaded?!? - not yet
-        // TODO : Get rid of the next lines and do something better
+        // TODO : Watch out if nbBlocksPerRow == 0, it should be redirected towards multiplySimple perhaps?
+        // (this number is not a very good choice for default but it was decided in the constructor...)
 
         // nbBlocksPerRow must divide the size of the matrix
         if (A.getSizeX() % nbBlocksPerRow) {
@@ -128,30 +258,23 @@ public:
         // i know this works, thanks to the check before that
         int blockSize = A.size() / nbBlocksPerRow;
 
-        // if nbBlocksPerRow equals 1, then we can multiply the matrices normally
-        if (nbBlocksPerRow == 1) {
-            for (int i = 0; i < A.size(); i++) {
-                for (int j = 0; j < A.size(); j++) {
-                    T result = 0.0;
-                    for (int k = 0; k < A.size(); k++) {
-                        result += A.element(k, j) * B.element(i, k);
+        // number of blocks per line
+        for (int m = 0; m < nbBlocksPerRow; ++m) {       // this represents which block we're looking at
+            // number of blocks per column (same number)
+            for (int n = 0; n < nbBlocksPerRow; ++n) {
+
+                const SquareMatrix<T> X(blockSize), Y(blockSize);
+                SquareMatrix Z(blockSize);
+
+                // copy of the block in X and Y, one element after another
+                for (int i = 0; i < blockSize; ++i) {
+                    for (int j = 0; j < blockSize; ++j) {
+                        X.setElement(i, j, A.element(blockSize * m + i, blockSize * n + j));
+                        Y.setElement(i, j, B.element(blockSize * m + i, blockSize * n + j));
                     }
-                    C.setElement(i, j, result);
                 }
-            }
-            // if the thread made it here, normally, its job is done
-            return;
-        }
 
-        for (int i = 0; i < A.size(); ++i) {
-
-            const SquareMatrix<T> X(blockSize), Y(blockSize);
-            SquareMatrix Z;
-
-            X.setElement();
-            // on sépare en plusieurs blocs
-            if (i + 1 % nbBlocksPerRow == 0) {
-
+                Buffer::sendJob(new ComputeParameters<T>(X, Y, Z));
             }
         }
     }
