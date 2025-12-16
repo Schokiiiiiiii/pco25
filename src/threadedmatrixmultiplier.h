@@ -7,7 +7,7 @@
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
 
-#include <vector>
+
 
 #include "abstractmatrixmultiplier.h"
 #include "matrix.h"
@@ -24,7 +24,7 @@ public:
     const SquareMatrix<T>* B;
     SquareMatrix<T>* C;
 
-    std::pair<int> index; // index of position of the block inside the original matrix
+    std::pair<uint, uint> index; // index of position of the block inside the original matrix
 };
 
 
@@ -167,7 +167,15 @@ public:
 template<class T>
 class ThreadedMatrixMultiplier : public AbstractMatrixMultiplier<T>
 {
+protected:
+    int nbThreads;
+    int nbBlocksPerRow;
+    Buffer<T> buffer;
+
+private:
     std::vector<PcoThread*> threads;
+    //std::array<SquareMatrix<T>*, nbBlocksPerRow * nbBlocksPerRow> results;
+    SquareMatrix<T>** results;
 
 public:
     ///
@@ -178,11 +186,12 @@ public:
     /// The threads shall be started from the constructor
     ///
     ThreadedMatrixMultiplier(int nbThreads, int nbBlocksPerRow = 0)
-        : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow)
+        : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow), buffer(nbThreads)
     {
         for (int i = 0; i < nbThreads; ++i) {
             threads.push_back(new PcoThread(multiplySimple));
         }
+        results = new SquareMatrix<T>*[nbBlocksPerRow * nbBlocksPerRow];
     }
 
     ///
@@ -196,7 +205,7 @@ public:
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->requestStop();
         }
-        ~Buffer;
+        buffer.~Buffer();
     }
 
     ///
@@ -205,7 +214,7 @@ public:
     ///
     void multiplySimple() {
         ComputeParameters<T> params;
-        while(Buffer::getJob(params)) {
+        while(buffer.getJob(params)) {
             for (int i = 0; i < params.A->size(); ++i) {
                 for (int j = 0; j < params.A->size(); ++j) {
                     T result = 0.0;
@@ -215,7 +224,9 @@ public:
                     params.C->setElement(i, j, result);
                 }
             }
-            // if the thread made it here, normally, its job is done
+            // the way we place the results is not a standard convention (at least to my knowledge)
+            // but it just seemed better that way
+            results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
         }
     }
 
@@ -266,8 +277,8 @@ public:
             for (int n = 0; n < nbBlocksPerRow; ++n) {
 
                 const SquareMatrix<T> X(blockSize), Y(blockSize);
-                SquareMatrix Z(blockSize);
-                std::pair<int> position = {};
+                SquareMatrix<T> Z(blockSize);
+                std::pair<int, int> position;
 
                 // copy of the block in X and Y, one element after another
                 for (int i = 0; i < blockSize; ++i) {
@@ -277,18 +288,28 @@ public:
                     }
                 }
 
-                Buffer::sendJob(new ComputeParameters<T>(&X, &Y, &Z, position(m, n)));
+                position.first = m;
+                position.second = n;
+
+                buffer.sendJob(new ComputeParameters<T>(&X, &Y, &Z, position));
             }
         }
 
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->join();
+        } // if all threads have joined, that means we have finished all the jobs, so results should be full
+
+        for (int j = 0; j < nbBlocksPerRow*nbBlocksPerRow; ++j) {
+            SquareMatrix<T> temp = *(results[j]);
+            for (int x = 0; x < temp.sizeX; ++x) { // lines
+                for (int y = 0; y < temp.sizeX; ++y) { // columns (yes i know the names are bad)
+                    C.setElement(x + (j / nbBlocksPerRow) * temp.sizeX, y + (j % nbBlocksPerRow) * temp.sizeX, temp.element(x, y));
+                }
+            }
         }
     }
 
-protected:
-    int nbThreads;
-    int nbBlocksPerRow;
+
 };
 
 
