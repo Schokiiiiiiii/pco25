@@ -116,7 +116,7 @@ public:
     ///
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int nbBlocksPerRow)
     {
-        // OK, computation is done correctly, but... Is it really multithreaded?!?
+        // OK, computation is done correctly, but... Is it really multithreaded?!? - not yet
         // TODO : Get rid of the next lines and do something better
 
         // nbBlocksPerRow must divide the size of the matrix
@@ -125,6 +125,10 @@ public:
             return;
         }
 
+        // i know this works, thanks to the check before that
+        int blockSize = A.size() / nbBlocksPerRow;
+
+        // if nbBlocksPerRow equals 1, then we can multiply the matrices normally
         if (nbBlocksPerRow == 1) {
             for (int i = 0; i < A.size(); i++) {
                 for (int j = 0; j < A.size(); j++) {
@@ -135,17 +139,19 @@ public:
                     C.setElement(i, j, result);
                 }
             }
+            // if the thread made it here, normally, its job is done
+            return;
         }
 
         for (int i = 0; i < A.size(); ++i) {
 
-            const SquareMatrix<T> X, Y;
+            const SquareMatrix<T> X(blockSize), Y(blockSize);
             SquareMatrix Z;
 
             X.setElement();
             // on sépare en plusieurs blocs
             if (i + 1 % nbBlocksPerRow == 0) {
-                // c'est là qu'on crée un thread en rappelant la même fonction avec nbBlocksPerRow = 1 et qu'on assembles les morceaux
+
             }
         }
     }
