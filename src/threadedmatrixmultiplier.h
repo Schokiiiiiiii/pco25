@@ -24,8 +24,7 @@ public:
     const SquareMatrix<T>* B;
     SquareMatrix<T>* C;
 
-    /* Maybe some parameters */
-    // maybe add an index of position inside the big matrix
+    std::pair<int> index; // index of position of the block inside the original matrix
 };
 
 
@@ -163,7 +162,7 @@ public:
 
 ///
 /// A multi-threaded multiplicator. multiply() should at least be reentrant.
-/// It is up to you to offer a very good parallelism.
+/// It is up to you to offer very good parallelism.
 ///
 template<class T>
 class ThreadedMatrixMultiplier : public AbstractMatrixMultiplier<T>
@@ -193,7 +192,11 @@ public:
     ///
     ~ThreadedMatrixMultiplier()
     {
-        // TODO
+        // TODO is that it?
+        for (int i = 0; i < nbThreads; ++i) {
+            threads.at(i)->requestStop();
+        }
+        ~Buffer;
     }
 
     ///
@@ -201,19 +204,18 @@ public:
     /// to get multiplied easily
     ///
     void multiplySimple() {
-        ComputeParameters<T>() params;
+        ComputeParameters<T> params;
         while(Buffer::getJob(params)) {
-            for (int i = 0; i < A.size(); i++) {
-                for (int j = 0; j < A.size(); j++) {
+            for (int i = 0; i < params.A->size(); ++i) {
+                for (int j = 0; j < params.A->size(); ++j) {
                     T result = 0.0;
-                    for (int k = 0; k < A.size(); k++) {
-                        result += A.element(k, j) * B.element(i, k);
+                    for (int k = 0; k < params.A->size(); ++k) {
+                        result += params.A->element(k, j) * params.B->element(i, k);
                     }
-                    C.setElement(i, j, result);
+                    params.C->setElement(i, j, result);
                 }
             }
             // if the thread made it here, normally, its job is done
-            return;
         }
     }
 
@@ -221,7 +223,7 @@ public:
     /// \brief multiply
     /// \param A First matrix
     /// \param B Second matrix
-    /// \param C Result of AxB
+    /// \param C Result of A*B
     ///
     /// For compatibility reason with SimpleMatrixMultiplier
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C) override
@@ -265,6 +267,7 @@ public:
 
                 const SquareMatrix<T> X(blockSize), Y(blockSize);
                 SquareMatrix Z(blockSize);
+                std::pair<int> position = {};
 
                 // copy of the block in X and Y, one element after another
                 for (int i = 0; i < blockSize; ++i) {
@@ -274,8 +277,12 @@ public:
                     }
                 }
 
-                Buffer::sendJob(new ComputeParameters<T>(X, Y, Z));
+                Buffer::sendJob(new ComputeParameters<T>(&X, &Y, &Z, position(m, n)));
             }
+        }
+
+        for (int i = 0; i < nbThreads; ++i) {
+            threads.at(i)->join();
         }
     }
 
