@@ -5,8 +5,6 @@
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
 
-
-
 #include "abstractmatrixmultiplier.h"
 #include "matrix.h"
 
@@ -172,7 +170,6 @@ protected:
 
 private:
     std::vector<PcoThread*> threads;
-    //std::array<SquareMatrix<T>*, nbBlocksPerRow * nbBlocksPerRow> results;
     SquareMatrix<T>** results;
 
 public:
@@ -187,8 +184,9 @@ public:
         : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow), buffer(nbThreads)
     {
         for (int i = 0; i < nbThreads; ++i) {
-            threads.push_back(new PcoThread([this] ()  {multiplySimple(); }));
+            threads.push_back(new PcoThread([this]() { multiplySimple(); }));
         }
+        // the following is done this way because we only know the value of nbBlocksPerRow at runtime
         results = new SquareMatrix<T>*[nbBlocksPerRow * nbBlocksPerRow];
     }
 
@@ -225,6 +223,7 @@ public:
             // the way we place the results is not a standard convention (at least to my knowledge)
             // but it just seemed better that way
             results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
+            ++buffer.nbJobFinished;
         }
     }
 
