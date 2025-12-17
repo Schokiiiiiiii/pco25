@@ -48,9 +48,6 @@ private:
     size_t nbGetWaiting = 0;
     bool stopRequested = false;
 
-    // JOBS MUTEX
-    PcoMutex jobsMutex;
-
 public:
 
     // INFOS
@@ -159,13 +156,6 @@ public:
         // exit monitor
         monitorOut();
     }
-
-    void addFinishedJob() {
-        // add a finished job with concurrency
-        jobsMutex.lock();
-        ++nbJobFinished;
-        jobsMutex.unlock();
-    }
 };
 
 ///
@@ -179,6 +169,7 @@ protected:
     int nbThreads;
     int nbBlocksPerRow;
     Buffer<T> buffer;
+    PcoMutex jobsMutex;
 
 private:
     std::vector<PcoThread*> threads;
@@ -193,8 +184,8 @@ public:
     /// The threads shall be started from the constructor
     ///
     ThreadedMatrixMultiplier(int nbThreads, int nbBlocksPerRow = 0)
-        : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow), buffer(nbThreads)
-    {
+        : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow), buffer(nbThreads) {
+
         for (int i = 0; i < nbThreads; ++i) {
             threads.push_back(new PcoThread([this]() { multiplySimple(); }));
         }
@@ -207,8 +198,8 @@ public:
     /// ending into completion.
     /// All threads have to be
     ///
-    ~ThreadedMatrixMultiplier()
-    {
+    ~ThreadedMatrixMultiplier() {
+
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->requestStop();
         }
@@ -216,8 +207,6 @@ public:
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->join();
         }
-
-        buffer.~Buffer();
     }
 
     ///
@@ -239,8 +228,10 @@ public:
             // the way we place the results is not a standard convention (at least to my knowledge)
             // but it just seemed better that way
             results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
-            buffer.addFinishedJob();
+            jobsMutex.lock();
+            ++buffer.nbJobFinished;
             if (buffer.nbJobFinished == nbBlocksPerRow * nbBlocksPerRow) buffer.requestStop();
+            jobsMutex.unlock();
         }
     }
 
