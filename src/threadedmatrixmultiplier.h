@@ -204,6 +204,7 @@ public:
             threads.at(i)->requestStop();
         }
         // in order to avoid undefined behavior, it's best we wait for all the threads to end before we nuke the buffer
+        // (because we call getJob)
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->join();
         }
@@ -244,11 +245,6 @@ public:
     /// For compatibility reason with SimpleMatrixMultiplier
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C) override
     {
-        // sizes must match, otherwise multiplying them is impossible
-        if (A.getSizeX() * 3 != A.getSizeX() + B.getSizeX() + C.getSizeX()) {
-            std::cerr << "Can't multiply given matrices, size mismatch\n";
-            return;
-        }
         multiply(A, B, C, nbBlocksPerRow);
     }
 
@@ -258,20 +254,32 @@ public:
     /// \param B Second matrix
     /// \param C Result of AxB
     /// \param nbBlocksPerRow Number of blocks per row (or columns)
+    /// \throws std::invalid_argument
     ///
     /// Executes the multithreaded computation, by decomposing the matrices into blocks.
     /// nbBlocksPerRow must divide the size of the matrix.
     ///
     void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int nbBlocksPerRow)
     {
-        // TODO : Watch out if nbBlocksPerRow == 0, it should be redirected towards multiplySimple perhaps?
+        // sizes must match, otherwise multiplying them is impossible
+        if (A.getSizeX() * 3 != A.getSizeX() + B.getSizeX() + C.getSizeX())
+            throw std::invalid_argument("Size mismatch. Matrices must be the same size");
+
+        // number of blocks should be positive
+        if (nbBlocksPerRow < 0) throw std::invalid_argument("Number of blocks cannot be negative");
+
+        // if nbBlocksPerRow == 0, it should be redirected towards multiplySimple
         // (this number is not a very good choice for default but it was decided in the constructor...)
+        if (!nbBlocksPerRow) {
+            std::pair<int, int> position;
+            position.first = 0;
+            position.second = 0;
+            buffer.sendJob(ComputeParameters<T>{&A, &B, &C, position});
+        }
 
         // nbBlocksPerRow must divide the size of the matrix
-        if (A.getSizeX() % nbBlocksPerRow) {
-            std::cerr << "Can't divide given matrices in " << nbBlocksPerRow << " blocks\n";
-            return;
-        }
+        if (A.getSizeX() % nbBlocksPerRow)
+            throw std::invalid_argument("Cannot divide given matrices in the chosen number of blocks");
 
         // i know this works, thanks to the check before that
         int blockSize = A.size() / nbBlocksPerRow;
@@ -300,15 +308,14 @@ public:
             }
         }
 
-        for (int i = 0; i < nbThreads; ++i) {
-            threads.at(i)->join();
-        } // if all threads have joined, that means we have finished all the jobs, so results should be full
+        // if all threads have joined, that means we have finished all the jobs, so results should be full
+        for (int i = 0; i < nbThreads; ++i) threads.at(i)->join();
 
-        for (int j = 0; j < nbBlocksPerRow*nbBlocksPerRow; ++j) {
-            SquareMatrix<T> temp = *(results[j]);
-            for (int x = 0; x < temp.size(); ++x) { // lines
-                for (int y = 0; y < temp.size(); ++y) { // columns (yes i know the names are bad)
-                    C.setElement(x + (j / nbBlocksPerRow) * temp.size(), y + (j % nbBlocksPerRow) * temp.size(), temp.element(x, y));
+        for (int j = 0; j < nbBlocksPerRow * nbBlocksPerRow; ++j) {
+            SquareMatrix<T> temp = *(results[j]); // temp.size() should be equal to blockSize
+            for (int x = 0; x < blockSize; ++x) { // lines
+                for (int y = 0; y < blockSize; ++y) { // columns (yes i know the names are bad)
+                    C.setElement(x + (j / nbBlocksPerRow) * blockSize, y + (j % nbBlocksPerRow) * blockSize, temp.element(x, y));
                 }
             }
         }
