@@ -321,10 +321,10 @@ public:
         for (int i = 0; i < nbThreads; ++i) threads.at(i)->join();
 
         for (int j = 0; j < nbBlocksPerRow * nbBlocksPerRow; ++j) {
-            SquareMatrix<T> temp = *(results[j]);
-            for (int x = 0; x < temp.size(); ++x) { // lines
-                for (int y = 0; y < temp.size(); ++y) { // columns (yes i know the names are bad)
-                    C.setElement(x + (j / nbBlocksPerRow) * temp.size(), y + (j % nbBlocksPerRow) * temp.size(), temp.element(x, y));
+            SquareMatrix<T> temp = *(results[j]); // temp.size() should be equal to blockSize
+            for (int x = 0; x < blockSize; ++x) { // lines
+                for (int y = 0; y < blockSize; ++y) { // columns (yes i know the names are bad)
+                    C.setElement(x + (j / nbBlocksPerRow) * blockSize, y + (j % nbBlocksPerRow) * blockSize, temp.element(x, y));
                 }
             }
         }
