@@ -4,7 +4,7 @@
 #include <pcosynchro/pcohoaremonitor.h>
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
-
+#include <pcosynchro/pcomutex.h>
 
 
 #include "abstractmatrixmultiplier.h"
@@ -47,6 +47,9 @@ private:
     size_t nbSendWaiting = 0;
     size_t nbGetWaiting = 0;
     bool stopRequested = false;
+
+    // JOBS MUTEX
+    PcoMutex jobsMutex;
 
 public:
 
@@ -155,6 +158,14 @@ public:
 
         // exit monitor
         monitorOut();
+    }
+
+    void addFinishedJob() {
+
+        // add a finished job with concurrency
+        jobsMutex.lock();
+        ++nbJobFinished;
+        jobsMutex.unlock();
     }
 };
 
