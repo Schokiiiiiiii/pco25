@@ -4,11 +4,8 @@
 #include <pcosynchro/pcohoaremonitor.h>
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
-<<<<<<< HEAD
-=======
 #include <pcosynchro/pcomutex.h>
 
->>>>>>> 52a64bef5e2e22afc210d7de2f9e133f73a94349
 
 #include "abstractmatrixmultiplier.h"
 #include "matrix.h"
@@ -164,7 +161,6 @@ public:
     }
 
     void addFinishedJob() {
-
         // add a finished job with concurrency
         jobsMutex.lock();
         ++nbJobFinished;
@@ -213,10 +209,14 @@ public:
     ///
     ~ThreadedMatrixMultiplier()
     {
-        // TODO is that it?
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->requestStop();
         }
+        // in order to avoid undefined behavior, it's best we wait for all the threads to end before we nuke the buffer
+        for (int i = 0; i < nbThreads; ++i) {
+            threads.at(i)->join();
+        }
+
         buffer.~Buffer();
     }
 
@@ -226,7 +226,7 @@ public:
     ///
     void multiplySimple() {
         ComputeParameters<T> params;
-        while(buffer.getJob(params)) {
+        while(!PcoThread::thisThread()->stopRequested() && buffer.getJob(params)) {
             for (int i = 0; i < params.A->size(); ++i) {
                 for (int j = 0; j < params.A->size(); ++j) {
                     T result = 0.0;
@@ -239,7 +239,8 @@ public:
             // the way we place the results is not a standard convention (at least to my knowledge)
             // but it just seemed better that way
             results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
-            ++buffer.nbJobFinished;
+            buffer.addFinishedJob();
+            if (buffer.nbJobFinished == nbBlocksPerRow * nbBlocksPerRow) buffer.requestStop();
         }
     }
 
