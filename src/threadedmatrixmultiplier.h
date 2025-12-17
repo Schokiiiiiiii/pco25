@@ -1,9 +1,7 @@
 #ifndef THREADEDMATRIXMULTIPLIER_H
 #define THREADEDMATRIXMULTIPLIER_H
 
-#include <pcosynchro/pcoconditionvariable.h>
 #include <pcosynchro/pcohoaremonitor.h>
-#include <pcosynchro/pcomutex.h>
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcothread.h>
 
@@ -189,7 +187,7 @@ public:
         : nbThreads(nbThreads), nbBlocksPerRow(nbBlocksPerRow), buffer(nbThreads)
     {
         for (int i = 0; i < nbThreads; ++i) {
-            threads.push_back(new PcoThread(multiplySimple));
+            threads.push_back(new PcoThread([this] ()  {multiplySimple(); }));
         }
         results = new SquareMatrix<T>*[nbBlocksPerRow * nbBlocksPerRow];
     }
@@ -276,7 +274,7 @@ public:
             // number of blocks per column (same number)
             for (int n = 0; n < nbBlocksPerRow; ++n) {
 
-                const SquareMatrix<T> X(blockSize), Y(blockSize);
+                SquareMatrix<T> X(blockSize), Y(blockSize);
                 SquareMatrix<T> Z(blockSize);
                 std::pair<int, int> position;
 
@@ -291,7 +289,7 @@ public:
                 position.first = m;
                 position.second = n;
 
-                buffer.sendJob(new ComputeParameters<T>(&X, &Y, &Z, position));
+                buffer.sendJob(ComputeParameters<T>{&X, &Y, &Z, position});
             }
         }
 
@@ -301,9 +299,9 @@ public:
 
         for (int j = 0; j < nbBlocksPerRow*nbBlocksPerRow; ++j) {
             SquareMatrix<T> temp = *(results[j]);
-            for (int x = 0; x < temp.sizeX; ++x) { // lines
-                for (int y = 0; y < temp.sizeX; ++y) { // columns (yes i know the names are bad)
-                    C.setElement(x + (j / nbBlocksPerRow) * temp.sizeX, y + (j % nbBlocksPerRow) * temp.sizeX, temp.element(x, y));
+            for (int x = 0; x < temp.size(); ++x) { // lines
+                for (int y = 0; y < temp.size(); ++y) { // columns (yes i know the names are bad)
+                    C.setElement(x + (j / nbBlocksPerRow) * temp.size(), y + (j % nbBlocksPerRow) * temp.size(), temp.element(x, y));
                 }
             }
         }
