@@ -18,7 +18,7 @@ template<class T>
 class ComputeParameters
 {
 public:
-    const SquareMatrix<T>* A;
+    const SquareMatrix<T>* A; // pointer to const SquareMatrix<T>
     const SquareMatrix<T>* B;
     SquareMatrix<T>* C;
 
@@ -203,7 +203,7 @@ public:
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->requestStop();
         }
-        // in order to avoid undefined behavior, it's best we wait for all the threads to end before we nuke the buffer
+        // in order to avoid undefined behavior, it's best we wait for all the threads to end before the buffer is destroyed
         // (because we call getJob)
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->join();
@@ -290,21 +290,24 @@ public:
             // number of blocks per column (same number)
             for (uint n = 0; n < nbBlocksPerRow; ++n) {
 
-                SquareMatrix<T> X(blockSize), Y(blockSize), Z(blockSize);
+                // these pointers are now on the heap, so they will be accessible outside of this scope
+                SquareMatrix<T>* X = new SquareMatrix<T>(blockSize);
+                SquareMatrix<T>* Y = new SquareMatrix<T>(blockSize);
+                SquareMatrix<T>* Z = new SquareMatrix<T>(blockSize);
                 std::pair<uint, uint> position;
 
                 // copy of the block in X and Y, one element after another
                 for (int i = 0; i < blockSize; ++i) {
                     for (int j = 0; j < blockSize; ++j) {
-                        X.setElement(i, j, A.element(blockSize * m + i, blockSize * n + j));
-                        Y.setElement(i, j, B.element(blockSize * m + i, blockSize * n + j));
+                        X->setElement(i, j, A.element(blockSize * m + i, blockSize * n + j));
+                        Y->setElement(i, j, B.element(blockSize * m + i, blockSize * n + j));
                     }
                 }
 
                 position.first = m;
                 position.second = n;
 
-                buffer.sendJob(ComputeParameters<T>{&X, &Y, &Z, position});
+                buffer.sendJob(ComputeParameters<T>{X, Y, Z, position});
             }
         }
 
