@@ -119,7 +119,7 @@ public:
 
         // wake up a sender
         if (nbSendWaiting) {
-            --nbGetWaiting;
+            --nbSendWaiting;
             signal(waitSendJob);
         }
 
@@ -230,6 +230,10 @@ public:
             // but it just seemed better that way
             results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
 
+            // we allocated with new ... so now we have to delete
+            delete params.A;
+            delete params.B;
+
             jobsMutex.lock();
             ++buffer.nbJobFinished;
             if (buffer.nbJobFinished == nbBlocksPerRow * nbBlocksPerRow) buffer.requestStop();
@@ -325,13 +329,17 @@ public:
         }
 
         // if all threads have joined, that means we have finished all the jobs, so results should be full
+        // WATCH OUT: this only works if we call multiply once per ThreadedMatrixMultiplier instance. If we
+        // want to call it a second time, the threads will be dead
         for (int i = 0; i < nbThreads; ++i) threads.at(i)->join();
 
         for (int j = 0; j < nbBlocksPerRow * nbBlocksPerRow; ++j) {
-            SquareMatrix<T> temp = *(results[j]); // temp.size() should be equal to blockSize
+            SquareMatrix<T> blockResult = *(results[j]); // blockResult.size() should be equal to blockSize
+            delete results[j]; // we allocated with new ... so now we have to delete
+
             for (int x = 0; x < blockSize; ++x) { // lines
                 for (int y = 0; y < blockSize; ++y) { // columns (yes i know the names are bad)
-                    C.setElement(x + (j / nbBlocksPerRow) * blockSize, y + (j % nbBlocksPerRow) * blockSize, temp.element(x, y));
+                    C.setElement(x + (j / nbBlocksPerRow) * blockSize, y + (j % nbBlocksPerRow) * blockSize, blockResult.element(x, y));
                 }
             }
         }
