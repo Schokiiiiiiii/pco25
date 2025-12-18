@@ -263,6 +263,7 @@ public:
     ///
     ~ThreadedMatrixMultiplier() override {
 
+        // ask buffer to stop to release threads
         buffer.requestStop();
 
         // ask all threads to stop
