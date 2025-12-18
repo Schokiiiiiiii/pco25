@@ -335,13 +335,13 @@ public:
     /// \param A First matrix
     /// \param B Second matrix
     /// \param C Result of AxB
-    /// /*\param nbBlocksPerRow Number of blocks per row (or columns)*/
+    /// \param nbBlocksPerRow Number of blocks per row (or columns)
     /// \throws std::invalid_argument
     ///
     /// Executes the multithreaded computation, by decomposing the matrices into blocks.
     /// nbBlocksPerRow must divide the size of the matrix.
     ///
-    void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int /* useless */ ) {
+    void multiply(const SquareMatrix<T>& A, const SquareMatrix<T>& B, SquareMatrix<T>& C, int nbBlocksPerRow ) {
 
         // sizes must match, otherwise multiplying them is impossible
         if (A.size() != B.size() || A.size() != C.size())
@@ -357,6 +357,9 @@ public:
 
         // acquire buffer so we're the one using it
         buffer.acquireBuffer();
+
+        // fix nbBlocksPerRow CAUSE APPARENTLY IT'S ALSO IN CONSTRUCTOR FUCK ME
+        this->nbBlocksPerRow = nbBlocksPerRow;
 
         // we take blockSize based on size and number of rows
         int blockSize = A.size() / nbBlocksPerRow;
