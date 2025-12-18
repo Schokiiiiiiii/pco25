@@ -69,6 +69,82 @@ TEST(Multiplier, Reentering)
 #endif // CHECK_DURATION
 }
 
+TEST(MultiplierStudent, MoreThreadsThanBlocks){
+
+#ifdef CHECK_DURATION
+    ASSERT_DURATION_LE(30, ({
+#endif // CHECK_DURATION
+                           constexpr int MATRIXSIZE = 500;
+                           constexpr int NBTHREADS = 100;
+                           constexpr int NBBLOCKSPERROW = 5;
+
+                           MultiplierTester<ThreadedMultiplierType> tester;
+
+                           tester.test(MATRIXSIZE, NBTHREADS, NBBLOCKSPERROW);
+
+#ifdef CHECK_DURATION
+                       }))
+#endif // CHECK_DURATION
+
+}
+
+TEST(MultiplierStudent, SingleBlockPerRow){
+
+#ifdef CHECK_DURATION
+    ASSERT_DURATION_LE(30, ({
+#endif // CHECK_DURATION
+                           constexpr int MATRIXSIZE = 500;
+                           constexpr int NBTHREADS = 4;
+                           constexpr int NBBLOCKSPERROW = 1;
+
+                           MultiplierTester<ThreadedMultiplierType> tester;
+
+                           tester.test(MATRIXSIZE, NBTHREADS, NBBLOCKSPERROW);
+
+#ifdef CHECK_DURATION
+                       }))
+#endif // CHECK_DURATION
+
+}
+
+TEST(MultiplierStudent, AsManyBlocksAsMatrixSize){
+
+#ifdef CHECK_DURATION
+    ASSERT_DURATION_LE(30, ({
+#endif // CHECK_DURATION
+                           constexpr int MATRIXSIZE = 500;
+                           constexpr int NBTHREADS = 4;
+                           constexpr int NBBLOCKSPERROW = 500;
+
+                           MultiplierTester<ThreadedMultiplierType> tester;
+
+                           tester.test(MATRIXSIZE, NBTHREADS, NBBLOCKSPERROW);
+
+#ifdef CHECK_DURATION
+                       }))
+#endif // CHECK_DURATION
+
+}
+
+/// Only one able to test since the other two should throw inside multiply
+TEST(ZeroValues, MatrixSizeZero){
+
+#ifdef CHECK_DURATION
+    ASSERT_DURATION_LE(30, ({
+#endif // CHECK_DURATION
+                           constexpr int MATRIXSIZE = 0;
+                           constexpr int NBTHREADS = 4;
+                           constexpr int NBBLOCKSPERROW = 5;
+
+                           MultiplierTester<ThreadedMultiplierType> tester;
+
+                           tester.test(MATRIXSIZE, NBTHREADS, NBBLOCKSPERROW);
+
+#ifdef CHECK_DURATION
+                       }))
+#endif // CHECK_DURATION
+
+}
 
 int main(int argc, char** argv)
 {
