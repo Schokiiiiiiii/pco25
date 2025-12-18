@@ -229,6 +229,7 @@ public:
             // the way we place the results is not a standard convention (at least to my knowledge)
             // but it just seemed better that way
             results[params.index.first * nbBlocksPerRow + params.index.second] = params.C;
+
             jobsMutex.lock();
             ++buffer.nbJobFinished;
             if (buffer.nbJobFinished == nbBlocksPerRow * nbBlocksPerRow) buffer.requestStop();
@@ -271,7 +272,7 @@ public:
         // if nbBlocksPerRow == 0, it should be redirected towards multiplySimple
         // (this number is not a very good choice for default but it was decided in the constructor...)
         if (!nbBlocksPerRow) {
-            std::pair<int, int> position;
+            std::pair<uint, uint> position;
             position.first = 0;
             position.second = 0;
             buffer.sendJob(ComputeParameters<T>{&A, &B, &C, position});
@@ -285,13 +286,12 @@ public:
         int blockSize = A.size() / nbBlocksPerRow;
 
         // number of blocks per line
-        for (int m = 0; m < nbBlocksPerRow; ++m) {       // this represents which block we're looking at
+        for (uint m = 0; m < nbBlocksPerRow; ++m) {       // this represents which block we're looking at
             // number of blocks per column (same number)
-            for (int n = 0; n < nbBlocksPerRow; ++n) {
+            for (uint n = 0; n < nbBlocksPerRow; ++n) {
 
-                SquareMatrix<T> X(blockSize), Y(blockSize);
-                SquareMatrix<T> Z(blockSize);
-                std::pair<int, int> position;
+                SquareMatrix<T> X(blockSize), Y(blockSize), Z(blockSize);
+                std::pair<uint, uint> position;
 
                 // copy of the block in X and Y, one element after another
                 for (int i = 0; i < blockSize; ++i) {
