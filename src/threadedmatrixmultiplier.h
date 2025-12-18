@@ -275,7 +275,20 @@ public:
             std::pair<uint, uint> position;
             position.first = 0;
             position.second = 0;
-            buffer.sendJob(ComputeParameters<T>{&A, &B, &C, position});
+
+            SquareMatrix<T>* Q = new SquareMatrix<T>(A.size());
+            SquareMatrix<T>* R = new SquareMatrix<T>(A.size());
+            SquareMatrix<T>* S = new SquareMatrix<T>(A.size());
+
+            // copy of A and B in Q and R, one element after another
+            for (int i = 0; i < A.size(); ++i) {
+                for (int j = 0; j < A.size(); ++j) {
+                    Q->setElement(i, j, A.element(i, j));
+                    R->setElement(i, j, B.element(i, j));
+                }
+            }
+
+            buffer.sendJob(ComputeParameters<T>{Q, R, S, position});
         }
 
         // nbBlocksPerRow must divide the size of the matrix
