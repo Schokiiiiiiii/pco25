@@ -36,23 +36,23 @@ class Buffer : public PcoHoareMonitor {
 private:
 
     // BUFFER
-    std::queue<ComputeParameters<T>> buffer;
-    size_t bufferSize;
+    std::queue<ComputeParameters<T>> buffer;    // buffer
+    size_t bufferSize;                          // max size the buffer can go up to
 
     // CONDITIONS
-    Condition waitSendJob;
-    Condition waitGetJob;
-    Condition finishedJobs;
+    Condition waitSendJob;  // makes senders wait
+    Condition waitGetJob;   // makes getters wait
+    Condition finishedJobs; // makes main threads accessing the buffer wait
 
     // SINGLE USE
-    Condition ownership;
-    bool beingUsed = false;
+    Condition ownership;    // only allows a single thread to own this buffer
+    bool beingUsed = false; // true if it's being used, false otherwise
 
     // STOPPING
-    size_t nbSendWaiting = 0;
-    size_t nbGetWaiting = 0;
-    size_t nbAcquireWaiting = 0;
-    bool stopRequested = false;
+    size_t nbSendWaiting = 0;       // counts number of senders to release if requested to stop
+    size_t nbGetWaiting = 0;        // counts number of getters to release if requested to stop
+    size_t nbAcquireWaiting = 0;    // counts number of acquires to release if requested to stop
+    bool stopRequested = false;     // true if it's been requested to stop, false otherwise
 
 public:
 
@@ -179,13 +179,6 @@ public:
             wait(finishedJobs);
         nbJobFinished = 0;
         monitorOut();
-    }
-
-    int getNbJobFinished() {
-        monitorIn();
-        const int result = nbJobFinished;
-        monitorOut();
-        return result;
     }
 
     void addJobAndCheckIfFinished(const int goal) {
