@@ -232,6 +232,50 @@ protected:
 private:
     std::vector<PcoThread*> threads;
 
+    ///
+    /// \brief multiplySimple gets called by the threads to churn on the bits of matrices that are small enough
+    /// to get multiplied easily
+    ///
+    void multiplySimple() {
+
+        // params we receive
+        ComputeParameters<T> params;
+
+        // loop while we get jobs and didn't get stopped
+        while(buffer.getJob(params) && !PcoThread::thisThread()->stopRequested()) {
+
+            const int rowGeneral = params.row * params.blockSize;
+            const int colGeneral = params.col * params.blockSize;
+
+            // loop over rows
+            for (int rowC = 0 ; rowC < params.blockSize ; ++rowC) {
+                int rowEnd = rowGeneral + rowC;
+
+                // loop over columns
+                for (int colC = 0 ; colC < params.blockSize ; ++colC) {
+                    int colEnd = colGeneral + colC;
+
+                    // initialize single result
+                    T result(0);
+
+                    // add all results for A and B going through them
+                    for (int pointer = 0 ; pointer < params.A->size() ; ++pointer) {
+
+                        // !!! x: columns, y:rows !!!
+                        result += params.A->element(pointer,  rowEnd) *
+                                  params.B->element(colEnd,  pointer);
+                    }
+
+                    // put result inside C
+                    params.C->setElement(colEnd, rowEnd, result);
+                }
+            }
+
+            // add job and check if we arrived to goal
+            buffer.addJobAndCheckIfFinished(nbBlocksPerRow * nbBlocksPerRow);
+        }
+    }
+
 public:
     ///
     /// \brief ThreadedMatrixMultiplier
@@ -267,49 +311,6 @@ public:
         // wait for all threads to quit
         for (int i = 0; i < nbThreads; ++i) {
             threads.at(i)->join();
-        }
-    }
-
-    ///
-    /// \brief multiplySimple gets called by the threads to churn on the bits of matrices that are small enough
-    /// to get multiplied easily
-    ///
-    void multiplySimple() {
-
-        // params we receive
-        ComputeParameters<T> params;
-
-        // loop while we get jobs and didn't get stopped
-        while(buffer.getJob(params) && !PcoThread::thisThread()->stopRequested()) {
-
-            const int rowGeneral = params.row * params.blockSize;
-            const int colGeneral = params.col * params.blockSize;
-
-            // loop over rows
-            for (int rowC = 0 ; rowC < params.blockSize ; ++rowC) {
-                int rowEnd = rowGeneral + rowC;
-
-                // loop over columns
-                for (int colC = 0 ; colC < params.blockSize ; ++colC) {
-                    int colEnd = colGeneral + colC;
-
-                    // initialize single result
-                    T result(0);
-
-                    // add all results for A and B going through them
-                    for (int pointer = 0 ; pointer < params.A->size() ; ++pointer) {
-
-                        result += params.A->element(pointer,  colEnd) *
-                                  params.B->element(rowEnd,  pointer);
-                    }
-
-                    // put result inside C
-                    params.C->setElement(rowEnd, colEnd, result);
-                }
-            }
-
-            // add job and check if we arrived to goal
-            buffer.addJobAndCheckIfFinished(nbBlocksPerRow * nbBlocksPerRow);
         }
     }
 
@@ -352,7 +353,7 @@ public:
         // acquire buffer so we're the one using it
         buffer.acquireBuffer();
 
-        // fix nbBlocksPerRow CAUSE APPARENTLY IT'S ALSO IN CONSTRUCTOR FUCK ME
+        // fix nbBlocksPerRow CAUSE APPARENTLY IT'S ALSO IN CONSTRUCTOR
         this->nbBlocksPerRow = nbBlocksPerRow;
 
         // we take blockSize based on size and number of rows
