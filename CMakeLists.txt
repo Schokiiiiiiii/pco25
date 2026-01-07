@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-g)
 
-option(PCO_USE_HOARE_MONITOR "Use Hoare monitor instead of mutex unlock/lock around interface calls" OFF)
+option(PCO_USE_HOARE_MONITOR "Use Hoare monitor instead of mutex unlock/lock around interface calls" ON)
 
 if(PCO_USE_HOARE_MONITOR)
   add_compile_definitions(PCO_USE_HOARE_MONITOR=1)
