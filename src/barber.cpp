@@ -29,22 +29,17 @@ void Barber::run() {
         if (_salon->getNbClient()) {
 
             // pick the next client
-            _interface->barberPicksNewClient();
             _salon->pickNextClient();
         } else {
 
             // go to sleep
-            _interface->barberGoToSleep();
             _salon->goToSleep();
-            _interface->barberStopSleeping();
         }
 
         // wait client at the working chair
-        _interface->barberGoesHairCut();
         _salon->waitClientAtChair();
 
         // cut client's hair
-        _interface->barberCuttingHair();
         _salon->beautifyClient();
     }
 

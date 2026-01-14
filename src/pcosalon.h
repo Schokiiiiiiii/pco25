@@ -27,6 +27,8 @@ class PcoSalon : public Salon
 public:
     PcoSalon(GraphicSalonInterface *interface, unsigned int capacity);
 
+    ~PcoSalon();
+
     /********************************************
      * Méthodes de l'interface pour les clients *
      *******************************************/
@@ -188,8 +190,14 @@ protected:
     // **************************** //
     //           OTHERS             //
     // **************************** //
-    int nbClientsWaiting;
-    bool clientOnChair;
+    const int _nb_sieges;
+    bool* seats;
+    int nbClientsWaiting    = 0;
+    bool isBarberSleeping   = false;
+    bool isClientOnChair    = false;
+
+private:
+    int findSeat() const;
 };
 
 #endif // PCOSALON_H
