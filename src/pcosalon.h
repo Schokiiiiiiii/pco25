@@ -178,6 +178,18 @@ protected:
     #endif
     
     // TODO
+    // **************************** //
+    //         CONCURRENCY          //
+    // **************************** //
+    Condition barberSleeping;
+    Condition clientWaiting;
+    Condition barberWaitsAtChair;
+
+    // **************************** //
+    //           OTHERS             //
+    // **************************** //
+    int nbClientsWaiting;
+    bool clientOnChair;
 };
 
 #endif // PCOSALON_H

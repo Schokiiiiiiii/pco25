@@ -53,32 +53,58 @@ void PcoSalon::goHome(unsigned clientId){
 /********************************************
  * Méthodes de l'interface pour le barbier  *
  *******************************************/
-unsigned int PcoSalon::getNbClient()
-{
-    // TODO
+unsigned int PcoSalon::getNbClient() {
+    // done - Fabien
+    return nbClientsWaiting;
 }
 
-void PcoSalon::goToSleep()
-{
-    // TODO
-}
+void PcoSalon::goToSleep() {
+    // done - Fabien
+    monitorIn();
 
+    // go to sleep
+    animationBarberGoToSleep();
+    wait(barberSleeping);
 
-void PcoSalon::pickNextClient()
-{
-    // TODO
-}
-
-
-void PcoSalon::waitClientAtChair()
-{
-    // TODO
+    monitorOut();
 }
 
 
-void PcoSalon::beautifyClient()
-{
-    // TODO
+void PcoSalon::pickNextClient() {
+    // done - Fabien
+    monitorIn();
+
+    // there should always be clients waiting when calling pickNextClient()
+    assert(nbClientsWaiting > 0 && "Barber tried to pick a client despite no cients waiting");
+
+    // wake up next client waiting
+    signal(clientWaiting);
+
+    monitorOut();
+}
+
+
+void PcoSalon::waitClientAtChair() {
+    // done - Fabien
+    monitorIn();
+
+    // wait if client is not on chair yet
+    if (!clientOnChair)
+        wait(barberWaitsAtChair);
+
+    monitorOut();
+}
+
+
+void PcoSalon::beautifyClient() {
+    // done - Fabien
+    monitorIn();
+
+    // BEAUTIFY
+    animationBarberCuttingHair();
+
+    monitorOut();
+
 }
 
 /********************************************
