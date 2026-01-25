@@ -28,7 +28,17 @@ Un problème est survenu toutefois étant que lorsqu'une animation est lancée, 
 après la fonction. Cela veut dire que nous perdons cette FIFO et que l'ordre d'arrivée dans le magasin ne décide pas
 nécessairement de comment se placent les clients.
 
-Voici une description des différents attributs de PcoSalon:
+### Barber & Client
+
+Il n'y a pas eu beaucoup à faire pour les `run()` des deux classes. On a suivi les machines d'états de la donnée. Les
+boucles tournent tant que la boutique n'est pas fermée. Le barbier doit également continuer tant qu'il y a des clients
+dans le magasin.
+
+<div style="page-break-before: always;"></div>
+
+### PcoSalon
+
+Voici une description des différents attributs de PcoSalon :
 
 | Nom                | Type               | Description                                                                                     |
 |--------------------|--------------------|-------------------------------------------------------------------------------------------------|
@@ -53,6 +63,8 @@ il aurait été possible de faire un array, mais les variables se sont rajoutée
 
 Le booléen `ìsSalonInService` sert à faire ressortir les clients réentrant et à donner l'information à l'extérieur de la
 classe que la boutique est fermée. Cela donnera fin au programme avec le temps.
+
+<div style="page-break-before: always;"></div>
 
 ## Tests
 
