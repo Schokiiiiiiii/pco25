@@ -182,10 +182,10 @@ protected:
     // **************************** //
     //         CONCURRENCY          //
     // **************************** //
-    Condition barberSleeping;       // condition when barber is sleeping
-    Condition clientWaiting;        // condition when client is waiting on a seat
-    Condition barberWaitsAtChair;   // condition when barber is waiting at the working chair
-    Condition clientBeautifying;    // condition when client is waiting for haircut to be done
+    Condition barberSleeping;           // condition when barber is sleeping
+    Condition clientWaiting;            // condition when client is waiting on a seat
+    Condition barberWaitsAtChair;       // condition when barber is waiting at the working chair
+    Condition clientBeautifying;        // condition when client is waiting for haircut to be done
 
     // **************************** //
     //           OTHERS             //
@@ -205,7 +205,7 @@ private:
      * @brief returns a seat number available.
      * @return int seat number
      */
-    [[nodiscard]] int findSeat() const;
+    [[nodiscard]] unsigned int findSeat() const;
 };
 
 #endif // PCOSALON_H

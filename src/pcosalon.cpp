@@ -13,9 +13,8 @@
 
 #include <iostream>
 #include <string>
-#include <exception>
 
-PcoSalon::PcoSalon(GraphicSalonInterface *interface, unsigned int capacity)
+PcoSalon::PcoSalon(GraphicSalonInterface *interface, const unsigned int capacity)
     : _interface(interface), _nb_sieges(capacity) {
     seats = new bool[capacity];
     for (size_t i = 0; i < capacity; ++i)
@@ -29,10 +28,10 @@ PcoSalon::~PcoSalon() {
 /********************************************
  * Méthodes de l'interface pour les clients *
  *******************************************/
-int PcoSalon::findSeat() const {
+unsigned int PcoSalon::findSeat() const {
 
     // look for a seat that is free
-    for (int i = 0 ; i < _nb_sieges ; ++i)
+    for (unsigned int i = 0 ; i < _nb_sieges ; ++i)
         if (!seats[i])
             return i;
 
@@ -73,7 +72,7 @@ bool PcoSalon::accessSalon(unsigned clientId) {
     }
 
     // find a seat
-    const int seat = findSeat();
+    const unsigned int seat = findSeat();
     seats[seat] = true;
 
     // wait on the seat
@@ -162,11 +161,13 @@ void PcoSalon::goToSleep() {
     monitorIn();
 
     // go to sleep
+    _interface->consoleAppendTextBarber("Temps de dormir... zzz...");
     isBarberSleeping = true;
     animationBarberGoToSleep();
     if (isBarberSleeping)
         wait(barberSleeping);
     isBarberSleeping = false;
+    _interface->consoleAppendTextBarber("J- J'suis re-réveillé !");
 
     monitorOut();
 }
@@ -236,7 +237,6 @@ void PcoSalon::endService() {
 
     // we only want to unstuck barber, clients will still get a haircut
     signal(barberSleeping);
-    signal(barberWaitsAtChair);
 
     monitorOut();
 }
