@@ -22,6 +22,7 @@ Client::Client(GraphicSalonInterface *interface, std::shared_ptr<SalonClientInte
 }
 
 void Client::run() {
+    // done
 
     // try to access salon
     while (_salon->isInService()) {

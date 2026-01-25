@@ -182,23 +182,29 @@ protected:
     // **************************** //
     //         CONCURRENCY          //
     // **************************** //
-    Condition barberSleeping;
-    Condition clientWaiting;
-    Condition barberWaitsAtChair;
-    Condition clientBeautifying;
+    Condition barberSleeping;       // condition when barber is sleeping
+    Condition clientWaiting;        // condition when client is waiting on a seat
+    Condition barberWaitsAtChair;   // condition when barber is waiting at the working chair
+    Condition clientBeautifying;    // condition when client is waiting for haircut to be done
 
     // **************************** //
     //           OTHERS             //
     // **************************** //
-    const unsigned int _nb_sieges;
-    bool* seats;
-    unsigned int nbClientsWaiting   = 0;
-    bool isBarberSleeping           = false;
-    bool isClientOnChair            = false;
-    bool isSalonInService           = true;
-    bool isClientReady              = false;
+    const unsigned int _nb_sieges;              // number of seats total
+    bool* seats;                                // array of seats
+    unsigned int nbClientsWaiting   = 0;        // number of clients waiting on the seats
+    bool isBarberSleeping           = false;    // true if barber is sleeping
+    bool isClientOnChair            = false;    // true if client is on the working chair
+    bool isSalonInService           = true;     // true if salon is in service
+    bool isClientReady              = false;    // true if client is ready and doesn't need to be picked by barber
+    bool haircutDone                = false;    // true if haircut is done
+
 
 private:
+    /**
+     * @brief returns a seat number available.
+     * @return int seat number
+     */
     [[nodiscard]] int findSeat() const;
 };
 

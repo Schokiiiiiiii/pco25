@@ -12,6 +12,8 @@
 #include <pcosynchro/pcothread.h>
 
 #include <iostream>
+#include <string>
+#include <exception>
 
 PcoSalon::PcoSalon(GraphicSalonInterface *interface, unsigned int capacity)
     : _interface(interface), _nb_sieges(capacity) {
@@ -29,16 +31,21 @@ PcoSalon::~PcoSalon() {
  *******************************************/
 int PcoSalon::findSeat() const {
 
+    // check there is a seat available at least
+    if (nbClientsWaiting >= _nb_sieges)
+        throw std::runtime_error("Cannot find a seat with no seats available");
+
+    // look for a seat that is free
     for (int i = 0 ; i < _nb_sieges ; ++i)
         if (!seats[i])
             return i;
 
+    // we should always find a seat
     assert(false && "findSeat() could not find a seat");
 }
 
 bool PcoSalon::accessSalon(unsigned clientId) {
-
-    // done - Fabien
+    // done
 
     // go inside the barber shop
     animationClientAccessEntrance(clientId);
@@ -52,24 +59,32 @@ bool PcoSalon::accessSalon(unsigned clientId) {
     }
 
     // check if barber is sleeping
-    if (isBarberSleeping) { // wake him up
+    if (isBarberSleeping) {
+
+        // wake barber up
+        _interface->consoleAppendTextClient(clientId, "Réveilles-toi barbier...");
         isClientReady = true;
         signal(barberSleeping);
+
+        // get out of monitor
         monitorOut();
         animationWakeUpBarber();
         return true;
-    } else { // wait in line (already a client)
-        // sit down at a chair
-        ++nbClientsWaiting;
-        const int seat = findSeat();
-        seats[seat] = true;
-        animationClientSitOnChair(clientId, seat);
-        wait(clientWaiting);
-
-        // get woken up
-        --nbClientsWaiting;
-        seats[seat] = false;
     }
+
+    // find a seat
+    const int seat = findSeat();
+    seats[seat] = true;
+
+    // wait on the seat
+    ++nbClientsWaiting;
+    _interface->consoleAppendTextClient(clientId, ("J'attends sur la chaise no " + std::to_string(seat)).data());
+    animationClientSitOnChair(clientId, seat);
+    wait(clientWaiting);
+
+    // finished waiting
+    --nbClientsWaiting;
+    seats[seat] = false;
 
     monitorOut();
 
@@ -77,25 +92,30 @@ bool PcoSalon::accessSalon(unsigned clientId) {
 }
 
 void PcoSalon::goForHairCut(unsigned clientId) {
-    // done - Fabien
+    // done
     monitorIn();
 
     // go to the working chair
+    _interface->consoleAppendTextClient(clientId, "J'ai attendu longtemps !");
     animationClientSitOnWorkChair(clientId);
     isClientReady = false;
     isClientOnChair = true;
     signal(barberWaitsAtChair);
 
     // wait for barber to finish
-    wait(clientBeautifying);
+    if (!haircutDone)
+        wait(clientBeautifying);
 
+    // put flags back to normal
+    _interface->consoleAppendTextClient(clientId, "Superbe coupe chef.");
     isClientOnChair = false;
+    haircutDone = false;
 
     monitorOut();
 }
 
 void PcoSalon::waitingForHairToGrow(unsigned clientId) {
-    // done - Fabien
+    // done
     monitorIn();
 
     // wait for hait to grow
@@ -106,7 +126,7 @@ void PcoSalon::waitingForHairToGrow(unsigned clientId) {
 
 
 void PcoSalon::walkAround(unsigned clientId) {
-    // done - Fabien
+    // done
     monitorIn();
 
     // walk around
@@ -117,7 +137,7 @@ void PcoSalon::walkAround(unsigned clientId) {
 
 
 void PcoSalon::goHome(unsigned clientId) {
-    // done - Fabien
+    // done
     monitorIn();
 
     // go home
@@ -131,7 +151,7 @@ void PcoSalon::goHome(unsigned clientId) {
  * Méthodes de l'interface pour le barbier  *
  *******************************************/
 unsigned int PcoSalon::getNbClient() {
-    // done - Fabien
+    // done
     monitorIn();
     const unsigned int nb = nbClientsWaiting + isClientReady + isClientOnChair;
     monitorOut();
@@ -139,13 +159,14 @@ unsigned int PcoSalon::getNbClient() {
 }
 
 void PcoSalon::goToSleep() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // go to sleep
     isBarberSleeping = true;
     animationBarberGoToSleep();
-    wait(barberSleeping);
+    if (isBarberSleeping)
+        wait(barberSleeping);
     isBarberSleeping = false;
 
     monitorOut();
@@ -153,13 +174,13 @@ void PcoSalon::goToSleep() {
 
 
 void PcoSalon::pickNextClient() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // there should always be clients waiting when calling pickNextClient()
-    assert(nbClientsWaiting > 0 && "Barber tried to pick a client despite no clients waiting");
+    assert((isClientReady || nbClientsWaiting > 0) && "Barber tried to pick a client despite no clients waiting");
 
-    // wake up next client waiting
+    // only signal waiting client if not already one waiting
     if (!isClientReady)
         signal(clientWaiting);
 
@@ -168,7 +189,7 @@ void PcoSalon::pickNextClient() {
 
 
 void PcoSalon::waitClientAtChair() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // wait if client is not on chair yet
@@ -180,13 +201,17 @@ void PcoSalon::waitClientAtChair() {
 
 
 void PcoSalon::beautifyClient() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // BEAUTIFY
+    _interface->consoleAppendTextBarber("On va vous faire une belle coupe.");
     animationBarberCuttingHair();
 
+    // signal client haircut is done
+    haircutDone = true;
     signal(clientBeautifying);
+    _interface->consoleAppendTextBarber("Cela coûtera 50.- CHF !");
 
     monitorOut();
 
@@ -196,7 +221,7 @@ void PcoSalon::beautifyClient() {
  *    Méthodes générales de l'interface     *
  *******************************************/
 bool PcoSalon::isInService() {
-    // done Fabien
+    // done
     monitorIn();
     const bool Service = isSalonInService;
     monitorOut();
@@ -205,16 +230,14 @@ bool PcoSalon::isInService() {
 
 
 void PcoSalon::endService() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // end service
     isSalonInService = false;
 
-    // wake up barber if sleeping
+    // we only want to unstuck barber, clients will still get a haircut
     signal(barberSleeping);
-
-    // wake up barber if waiting
     signal(barberWaitsAtChair);
 
     monitorOut();

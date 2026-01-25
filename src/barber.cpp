@@ -19,8 +19,7 @@ Barber::Barber(GraphicSalonInterface *interface, std::shared_ptr<SalonBarberInte
 }
 
 void Barber::run() {
-
-    // modified - Fabien
+    // done
 
     // we keep looping until closed
     while (_salon->isInService() || _salon->getNbClient()) {
