@@ -55,6 +55,9 @@ bool PcoSalon::accessSalon(unsigned clientId) {
     if (isBarberSleeping) { // wake him up
         isClientReady = true;
         signal(barberSleeping);
+        monitorOut();
+        animationWakeUpBarber();
+        return true;
     } else { // wait in line (already a client)
         // sit down at a chair
         ++nbClientsWaiting;
