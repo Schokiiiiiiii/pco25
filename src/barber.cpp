@@ -19,32 +19,26 @@ Barber::Barber(GraphicSalonInterface *interface, std::shared_ptr<SalonBarberInte
 }
 
 void Barber::run() {
-
-    // modified - Fabien
+    // done
 
     // we keep looping until closed
-    while (_salon->isInService()) {
+    while (_salon->isInService() || _salon->getNbClient()) {
 
         // check if there are any clients
         if (_salon->getNbClient()) {
 
             // pick the next client
-            _interface->barberPicksNewClient();
             _salon->pickNextClient();
         } else {
 
             // go to sleep
-            _interface->barberGoToSleep();
             _salon->goToSleep();
-            _interface->barberStopSleeping();
         }
 
         // wait client at the working chair
-        _interface->barberGoesHairCut();
         _salon->waitClientAtChair();
 
         // cut client's hair
-        _interface->barberCuttingHair();
         _salon->beautifyClient();
     }
 

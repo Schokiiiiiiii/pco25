@@ -12,41 +12,136 @@
 #include <pcosynchro/pcothread.h>
 
 #include <iostream>
+#include <string>
 
-PcoSalon::PcoSalon(GraphicSalonInterface *interface, unsigned int capacity)
-    : _interface(interface)
-{
-    // TODO
+PcoSalon::PcoSalon(GraphicSalonInterface *interface, const unsigned int capacity)
+    : _interface(interface), _nb_sieges(capacity) {
+    seats = new bool[capacity];
+    for (size_t i = 0; i < capacity; ++i)
+        seats[i] = false;
+}
+
+PcoSalon::~PcoSalon() {
+    delete[] seats;
 }
 
 /********************************************
  * Méthodes de l'interface pour les clients *
  *******************************************/
-bool PcoSalon::accessSalon(unsigned clientId)
-{
-    // TODO
+unsigned int PcoSalon::findSeat() const {
+
+    // look for a seat that is free
+    for (unsigned int i = 0 ; i < _nb_sieges ; ++i)
+        if (!seats[i])
+            return i;
+
+    // we should always find a seat
+    assert(false && "findSeat() could not find a seat");
+}
+
+bool PcoSalon::accessSalon(unsigned clientId) {
+    // done
+
+    monitorIn();
+
+    // if not enough space, return false
+    if (nbClientsWaiting >= _nb_sieges) {
+        monitorOut();
+        return false;
+    }
+
+    // add a client waiting
+    ++nbClientsWaiting;
+
+    // go inside the barber shop
+    animationClientAccessEntrance(clientId);
+
+    // check if barber is sleeping
+    if (isBarberSleeping) {
+
+        // wake barber up
+        --nbClientsWaiting;
+        _interface->consoleAppendTextClient(clientId, "Réveilles-toi barbier...");
+        isClientReady = true;
+        signal(barberSleeping);
+
+        // get out of monitor
+        animationWakeUpBarber();
+        monitorOut();
+        return true;
+    }
+
+    // find a seat
+    const unsigned int seat = findSeat();
+    seats[seat] = true;
+
+    // wait on the seat
+    _interface->consoleAppendTextClient(clientId, ("J'attends sur la chaise no " + std::to_string(seat)).data());
+    animationClientSitOnChair(clientId, seat);
+    wait(clientWaiting);
+
+    // finished waiting
+    --nbClientsWaiting;
+    seats[seat] = false;
+
+    monitorOut();
+
+    return true;
+}
+
+void PcoSalon::goForHairCut(unsigned clientId) {
+    // done
+    monitorIn();
+
+    // go to the working chair
+    _interface->consoleAppendTextClient(clientId, "J'ai attendu longtemps !");
+    animationClientSitOnWorkChair(clientId);
+    isClientReady = false;
+    isClientOnChair = true;
+    signal(barberWaitsAtChair);
+
+    // wait for barber to finish
+    if (!haircutDone)
+        wait(clientBeautifying);
+
+    // put flags back to normal
+    _interface->consoleAppendTextClient(clientId, "Superbe coupe chef.");
+    isClientOnChair = false;
+    haircutDone = false;
+
+    monitorOut();
+}
+
+void PcoSalon::waitingForHairToGrow(unsigned clientId) {
+    // done
+    monitorIn();
+
+    // wait for hait to grow
+    animationClientWaitForHairToGrow(clientId);
+
+    monitorOut();
 }
 
 
-void PcoSalon::goForHairCut(unsigned clientId)
-{
-    // TODO
-}
+void PcoSalon::walkAround(unsigned clientId) {
+    // done
+    monitorIn();
 
-void PcoSalon::waitingForHairToGrow(unsigned clientId)
-{
-    // TODO
-}
+    // walk around
+    animationClientWalkAround(clientId);
 
-
-void PcoSalon::walkAround(unsigned clientId)
-{
-    // TODO
+    monitorOut();
 }
 
 
-void PcoSalon::goHome(unsigned clientId){
-    // TODO
+void PcoSalon::goHome(unsigned clientId) {
+    // done
+    monitorIn();
+
+    // go home
+    animationClientGoHome(clientId);
+
+    monitorOut();
 }
 
 
@@ -54,42 +149,51 @@ void PcoSalon::goHome(unsigned clientId){
  * Méthodes de l'interface pour le barbier  *
  *******************************************/
 unsigned int PcoSalon::getNbClient() {
-    // done - Fabien
-    return nbClientsWaiting;
+    // done
+    monitorIn();
+    const unsigned int nb = nbClientsWaiting + isClientReady + isClientOnChair;
+    monitorOut();
+    return nb;
 }
 
 void PcoSalon::goToSleep() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // go to sleep
+    _interface->consoleAppendTextBarber("Temps de dormir... zzz...");
+    isBarberSleeping = true;
     animationBarberGoToSleep();
-    wait(barberSleeping);
+    if (isBarberSleeping)
+        wait(barberSleeping);
+    isBarberSleeping = false;
+    _interface->consoleAppendTextBarber("J- J'suis re-réveillé !");
 
     monitorOut();
 }
 
 
 void PcoSalon::pickNextClient() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // there should always be clients waiting when calling pickNextClient()
-    assert(nbClientsWaiting > 0 && "Barber tried to pick a client despite no cients waiting");
+    assert((isClientReady || nbClientsWaiting > 0) && "Barber tried to pick a client despite no clients waiting");
 
-    // wake up next client waiting
-    signal(clientWaiting);
+    // only signal waiting client if not already one waiting
+    if (!isClientReady)
+        signal(clientWaiting);
 
     monitorOut();
 }
 
 
 void PcoSalon::waitClientAtChair() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // wait if client is not on chair yet
-    if (!clientOnChair)
+    if (!isClientOnChair)
         wait(barberWaitsAtChair);
 
     monitorOut();
@@ -97,28 +201,44 @@ void PcoSalon::waitClientAtChair() {
 
 
 void PcoSalon::beautifyClient() {
-    // done - Fabien
+    // done
     monitorIn();
 
     // BEAUTIFY
+    _interface->consoleAppendTextBarber("On va vous faire une belle coupe.");
     animationBarberCuttingHair();
 
-    monitorOut();
+    // signal client haircut is done
+    haircutDone = true;
+    signal(clientBeautifying);
+    _interface->consoleAppendTextBarber("Cela coûtera 50.- CHF !");
 
+    monitorOut();
 }
 
 /********************************************
  *    Méthodes générales de l'interface     *
  *******************************************/
-bool PcoSalon::isInService()
-{
-    // TODO
+bool PcoSalon::isInService() {
+    // done
+    monitorIn();
+    const bool service = isSalonInService;
+    monitorOut();
+    return service;
 }
 
 
-void PcoSalon::endService()
-{
-    // TODO
+void PcoSalon::endService() {
+    // done
+    monitorIn();
+
+    // end service
+    isSalonInService = false;
+
+    // we only want to unstuck barber, clients will still get a haircut
+    signal(barberSleeping);
+
+    monitorOut();
 }
 
 /********************************************
