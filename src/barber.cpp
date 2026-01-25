@@ -23,7 +23,7 @@ void Barber::run() {
     // modified - Fabien
 
     // we keep looping until closed
-    while (_salon->isInService()) {
+    while (_salon->isInService() || _salon->getNbClient()) {
 
         // check if there are any clients
         if (_salon->getNbClient()) {

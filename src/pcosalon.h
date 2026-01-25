@@ -178,26 +178,28 @@ protected:
     #if !PCO_USE_HOARE_MONITOR
     PcoMutex _mutex;
     #endif
-    
-    // TODO
+
     // **************************** //
     //         CONCURRENCY          //
     // **************************** //
     Condition barberSleeping;
     Condition clientWaiting;
     Condition barberWaitsAtChair;
+    Condition clientBeautifying;
 
     // **************************** //
     //           OTHERS             //
     // **************************** //
-    const int _nb_sieges;
+    const unsigned int _nb_sieges;
     bool* seats;
-    int nbClientsWaiting    = 0;
-    bool isBarberSleeping   = false;
-    bool isClientOnChair    = false;
+    unsigned int nbClientsWaiting   = 0;
+    bool isBarberSleeping           = false;
+    bool isClientOnChair            = false;
+    bool isSalonInService           = true;
+    bool isClientReady              = false;
 
 private:
-    int findSeat() const;
+    [[nodiscard]] int findSeat() const;
 };
 
 #endif // PCOSALON_H
