@@ -31,10 +31,6 @@ PcoSalon::~PcoSalon() {
  *******************************************/
 int PcoSalon::findSeat() const {
 
-    // check there is a seat available at least
-    if (nbClientsWaiting >= _nb_sieges)
-        throw std::runtime_error("Cannot find a seat with no seats available");
-
     // look for a seat that is free
     for (int i = 0 ; i < _nb_sieges ; ++i)
         if (!seats[i])
@@ -47,9 +43,6 @@ int PcoSalon::findSeat() const {
 bool PcoSalon::accessSalon(unsigned clientId) {
     // done
 
-    // go inside the barber shop
-    animationClientAccessEntrance(clientId);
-
     monitorIn();
 
     // if not enough space, return false
@@ -58,17 +51,24 @@ bool PcoSalon::accessSalon(unsigned clientId) {
         return false;
     }
 
+    // add a client waiting
+    ++nbClientsWaiting;
+
+    // go inside the barber shop
+    animationClientAccessEntrance(clientId);
+
     // check if barber is sleeping
     if (isBarberSleeping) {
 
         // wake barber up
+        --nbClientsWaiting;
         _interface->consoleAppendTextClient(clientId, "Réveilles-toi barbier...");
         isClientReady = true;
         signal(barberSleeping);
 
         // get out of monitor
-        monitorOut();
         animationWakeUpBarber();
+        monitorOut();
         return true;
     }
 
@@ -77,7 +77,6 @@ bool PcoSalon::accessSalon(unsigned clientId) {
     seats[seat] = true;
 
     // wait on the seat
-    ++nbClientsWaiting;
     _interface->consoleAppendTextClient(clientId, ("J'attends sur la chaise no " + std::to_string(seat)).data());
     animationClientSitOnChair(clientId, seat);
     wait(clientWaiting);
@@ -214,7 +213,6 @@ void PcoSalon::beautifyClient() {
     _interface->consoleAppendTextBarber("Cela coûtera 50.- CHF !");
 
     monitorOut();
-
 }
 
 /********************************************
@@ -223,9 +221,9 @@ void PcoSalon::beautifyClient() {
 bool PcoSalon::isInService() {
     // done
     monitorIn();
-    const bool Service = isSalonInService;
+    const bool service = isSalonInService;
     monitorOut();
-    return Service;
+    return service;
 }
 
 
