@@ -194,10 +194,10 @@ protected:
     bool* seats;                                // array of seats
     unsigned int nbClientsWaiting   = 0;        // number of clients waiting on the seats
     bool isBarberSleeping           = false;    // true if barber is sleeping
-    bool isClientOnChair            = false;    // true if client is on the working chair
-    bool isSalonInService           = true;     // true if salon is in service
     bool isClientReady              = false;    // true if client is ready and doesn't need to be picked by barber
+    bool isClientOnChair            = false;    // true if client is on the working chair
     bool haircutDone                = false;    // true if haircut is done
+    bool isSalonInService           = true;     // true if salon is in service
 
 
 private:
